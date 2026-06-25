@@ -352,6 +352,53 @@ body {
 }
 .reset-counts:hover { opacity: 1; }
 
+/* export/import */
+.data-btn {
+  position: relative;
+}
+.data-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--card-bg);
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.12);
+  z-index: 10;
+  min-width: 120px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+.data-menu.show { display: block; }
+.data-menu-item {
+  padding: 10px 16px;
+  font-size: 13px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  color: var(--text);
+  transition: background .1s;
+}
+.data-menu-item:hover { background: var(--accent-light); }
+.data-menu-item:first-child { border-bottom: 1px solid var(--border); }
+.toast {
+  position: fixed;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text);
+  color: var(--card-bg);
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  z-index: 200;
+  animation: fadeIn .2s;
+  pointer-events: none;
+}
+
 @media (max-width: 480px) {
   .card-wall { grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 8px; }
   .detail-overlay { padding: 0 12px; }
@@ -371,6 +418,14 @@ body {
     <h1>🔤 Phonics</h1>
     <div class="header-controls">
       <button class="btn btn-sm" onclick="toggleVoice()" id="voiceBtn">UK</button>
+      <span class="data-btn" style="position:relative">
+        <button class="btn btn-sm" onclick="toggleDataMenu()">📁</button>
+        <div class="data-menu" id="dataMenu">
+          <button class="data-menu-item" onclick="exportData()">📥 导出数据</button>
+          <button class="data-menu-item" onclick="document.getElementById('importFile').click()">📤 导入数据</button>
+        </div>
+        <input type="file" id="importFile" accept=".json" style="display:none">
+      </span>
     </div>
   </div>
 
@@ -1379,6 +1434,62 @@ function toggleVoice() {
   state.voiceType = state.voiceType === 'uk' ? 'us' : 'uk';
   document.getElementById('voiceBtn').textContent = state.voiceType === 'uk' ? 'UK' : 'US';
 }
+
+// ==================== DATA EXPORT/IMPORT ====================
+function toggleDataMenu() {
+  document.getElementById('dataMenu').classList.toggle('show');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.data-btn')) document.getElementById('dataMenu').classList.remove('show');
+});
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2000);
+}
+
+function exportData() {
+  const stats = getStats();
+  const data = { stats, exportedAt: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `phonics-stats-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('✅ 数据已导出');
+  document.getElementById('dataMenu').classList.remove('show');
+}
+
+document.getElementById('importFile').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!data.stats || !data.stats.counts) {
+        showToast('❌ 无效的备份文件');
+        return;
+      }
+      localStorage.setItem('phonics_stats', JSON.stringify(data.stats));
+      randomFlipped = {};
+      renderWall();
+      showToast('✅ 数据已导入');
+    } catch (err) {
+      showToast('❌ 文件解析失败');
+    }
+  };
+  reader.readAsText(file);
+  this.value = '';
+  document.getElementById('dataMenu').classList.remove('show');
+});
 
 // ==================== INIT ====================
 function initFilters() {
