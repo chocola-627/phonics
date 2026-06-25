@@ -1210,35 +1210,30 @@ function resetCounts() {
 const synth = window.speechSynthesis;
 let synthReady = false;
 
-function initSynth() {
-  if (synthReady) return;
-  synth.getVoices();
-  synthReady = true;
-  // Some browsers load voices async — retry once after a short delay
-  if (synth.getVoices().length === 0) {
-    synth.addEventListener('voiceschanged', () => {}, { once: true });
-  }
-}
-
 function speak(text) {
   if (!synth) return;
   initSynth();
 
-  const u = new SpeechSynthesisUtterance(text);
+  const voices = synth.getVoices();
   const lang = state.voiceType === 'uk' ? 'en-GB' : 'en-US';
+
+  // Voices not loaded yet — wait and retry
+  if (voices.length === 0) {
+    synth.addEventListener('voiceschanged', () => speak(text), { once: true });
+    return;
+  }
+
+  const u = new SpeechSynthesisUtterance(text);
   u.lang = lang;
-  u.rate = 0.7;
+  u.rate = 0.5;
 
   // Prefer female voices
-  const voices = synth.getVoices();
-  if (voices.length > 0) {
-    const femaleNames = state.voiceType === 'uk'
-      ? ['Flo', 'Sandy', 'Shelley']
-      : ['Samantha', 'Kathy', 'Sandy', 'Shelley'];
-    let voice = voices.find(v => v.lang.startsWith(lang) && femaleNames.some(n => v.name.includes(n)));
-    if (!voice) voice = voices.find(v => v.lang.startsWith(lang));
-    if (voice) u.voice = voice;
-  }
+  const femaleNames = state.voiceType === 'uk'
+    ? ['Flo', 'Sandy', 'Shelley', 'Grandma']
+    : ['Samantha', 'Kathy', 'Sandy', 'Shelley', 'Flo', 'Grandma'];
+  let voice = voices.find(v => v.lang.startsWith(lang) && femaleNames.some(n => v.name.includes(n)));
+  if (!voice) voice = voices.find(v => v.lang.startsWith(lang));
+  if (voice) u.voice = voice;
 
   synth.cancel();
   setTimeout(() => synth.speak(u), 10);
