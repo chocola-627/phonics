@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phonics Cards</title>
+<style>
+:root {
+  --bg: #f5f3ef;
+  --card-bg: #fff;
+  --text: #2c2c2c;
+  --text-light: #888;
+  --accent: #d4a373;
+  --accent-light: #faedcd;
+  --border: #e8e0d4;
+  --shadow: 0 2px 12px rgba(0,0,0,0.06);
+  --radius: 14px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+.container { max-width: 820px; margin: 0 auto; padding: 16px; }
+
+/* header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.header h1 { font-size: 20px; font-weight: 700; }
+.header-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+.btn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--card-bg);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  transition: all .15s;
+}
+.btn:hover { opacity: .8; }
+.btn-active { background: var(--accent); color: #fff; }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+
+/* filters */
+.filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+
+/* mode toggle */
+.mode-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  background: var(--card-bg);
+  padding: 4px;
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+}
+.mode-btn {
+  flex: 1;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-light);
+  transition: all .15s;
+}
+.mode-btn-active {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* card wall grid */
+.card-wall {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 10px;
+}
+.card-wall-tile {
+  aspect-ratio: 1;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: all .2s;
+  border: 2px solid transparent;
+  position: relative;
+  user-select: none;
+}
+.card-wall-tile:hover { transform: translateY(-2px); }
+.card-wall-tile:active { transform: scale(.96); }
+.tile-letter { background: #f0ebe3; }
+.tile-short { background: #e8f0e8; }
+.tile-long { background: #e8eef0; }
+.tile-vowel { background: #ede8f0; }
+.tile-consonant { background: #f0e8ec; }
+
+/* card back (random mode) */
+.card-back {
+  background: linear-gradient(135deg, var(--accent-light), #e8d5c4);
+  border: 2px solid var(--accent);
+}
+.card-back::after {
+  content: "?";
+  font-size: 24px;
+  color: var(--accent);
+  opacity: .5;
+}
+/* seen badge - only in random mode */
+.card-wall-tile.seen-badge::before {
+  content: attr(data-count);
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* detail view */
+.detail-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.4);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 72px;
+  animation: fadeIn .15s;
+}
+.detail-card {
+  position: relative;
+  background: var(--card-bg);
+  border-radius: 18px;
+  max-width: 520px;
+  width: 100%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 40px rgba(0,0,0,.12);
+  animation: slideUp .2s;
+}
+
+/* nav arrows - outside card */
+.nav-arrow {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 36px;
+  color: var(--text-light);
+  z-index: 3;
+  width: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color .15s;
+}
+.nav-arrow:hover { color: var(--text); }
+.nav-arrow-prev { left: -64px; }
+.nav-arrow-next { right: -64px; }
+
+/* big next button - random mode */
+.nav-big-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  right: -80px;
+  width: 64px;
+  padding: 16px 6px;
+  border: none;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  z-index: 3;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+  box-shadow: 0 2px 12px rgba(0,0,0,.1);
+  transition: all .15s;
+}
+.nav-big-next:hover { box-shadow: 0 4px 16px rgba(0,0,0,.15); transform: translateY(-50%) translateX(-2px); }
+.detail-top {
+  flex-shrink: 0;
+  padding: 20px 24px 0;
+}
+.detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.detail-title-group {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.detail-title {
+  font-size: 28px;
+  font-weight: 800;
+}
+.detail-sound {
+  font-size: 16px;
+  color: var(--text-light);
+  font-weight: 400;
+}
+.detail-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.detail-close { font-size: 20px; padding: 4px 14px; }
+
+/* translation toggle button - simple line art */
+.cn-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border: 1.5px solid var(--text-light);
+  border-radius: 6px;
+  padding: 2px 7px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-light);
+  cursor: pointer;
+  background: transparent;
+  transition: all .15s;
+  line-height: 1.4;
+  letter-spacing: .5px;
+}
+.cn-toggle:hover { border-color: var(--accent); color: var(--accent); }
+.cn-toggle.active { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+
+/* scrollable content */
+.detail-scroll {
+  overflow-y: auto;
+  padding: 0 24px 16px;
+  flex: 1;
+}
+.detail-items { display: flex; flex-direction: column; gap: 14px; }
+.item-row {
+  padding: 12px 14px;
+  background: #faf8f6;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background .15s;
+}
+.item-row:hover { background: #f4f0ea; }
+.item-word {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 3px;
+  display: inline-block;
+}
+.item-word .speaker { font-size: 14px; margin-left: 6px; opacity: .5; }
+.item-sentence {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.5;
+  margin-top: 3px;
+}
+.item-sentence .speaker { font-size: 12px; margin-left: 4px; opacity: .4; }
+.item-cn {
+  font-size: 13px;
+  color: var(--text-light);
+  display: none;
+  margin-left: 6px;
+}
+.item-sc {
+  font-size: 13px;
+  color: var(--text-light);
+  margin-top: 1px;
+  display: none;
+}
+.show-cn .item-cn { display: inline; }
+.show-cn .item-sc { display: block; }
+
+/* bottom bar */
+.detail-nav {
+  flex-shrink: 0;
+  padding: 10px 24px;
+  border-top: 1px solid var(--border);
+}
+
+/* empty state */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-light);
+  font-size: 15px;
+}
+
+/* animations */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes flipIn {
+  from { transform: perspective(600px) rotateY(90deg); opacity: 0; }
+  to { transform: perspective(600px) rotateY(0); opacity: 1; }
+}
+.flip-anim { animation: flipIn .35s ease-out; }
+
+/* stats bar */
+.stats-bar {
+  font-size: 12px;
+  color: var(--text-light);
+  text-align: center;
+  padding: 8px 0;
+  margin-top: 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.reset-counts {
+  font-size: 11px;
+  text-decoration: underline dotted;
+  cursor: pointer;
+  color: var(--text-light);
+  opacity: .6;
+}
+.reset-counts:hover { opacity: 1; }
+
+@media (max-width: 480px) {
+  .card-wall { grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 8px; }
+  .detail-overlay { padding: 0 12px; }
+  .detail-card { max-height: 90vh; }
+  .detail-top { padding: 16px 16px 0; }
+  .detail-scroll { padding: 0 16px 12px; }
+  .detail-nav { padding: 8px 16px; }
+  .detail-title { font-size: 24px; }
+  .nav-arrow, .nav-big-next { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="container" id="app">
+  <div class="header">
+    <h1>🔤 Phonics</h1>
+    <div class="header-controls">
+      <button class="btn btn-sm" onclick="toggleVoice()" id="voiceBtn">UK</button>
+    </div>
+  </div>
+
+  <div class="mode-bar">
+    <button class="mode-btn mode-btn-active" onclick="setMode('browse')" id="modeBrowse">📖 Browse</button>
+    <button class="mode-btn" onclick="setMode('random')" id="modeRandom">🎲 Random</button>
+  </div>
+
+  <div class="filters" id="filters"></div>
+
+  <div id="statsBar" class="stats-bar"></div>
+  <div id="cardWall" class="card-wall"></div>
+  <div id="emptyState"></div>
+</div>
+
+<script>
+// ==================== DATA ====================
+const VOICE_GROUPS = {
+  letter: { label: "Letters", cls: "tile-letter" },
+  short:  { label: "Short", cls: "tile-short" },
+  long:   { label: "Long", cls: "tile-long" },
+  vowel:  { label: "Vowel", cls: "tile-vowel" },
+  consonant: { label: "Consonant", cls: "tile-consonant" },
+};
+
+const CARDS = [
+  // ===== LETTERS (26) =====
+  {id:"Aa",cat:"letter",label:"Aa",sound:"/æ/",
+   items:[
+    {w:"apple", s:"I see an apple.", sc:"我看见一个苹果。", c:"苹果"},
+    {w:"ant", s:"An ant is on the ground.", sc:"一只蚂蚁在地上。", c:"蚂蚁"},
+    {w:"alligator", s:"An alligator has big teeth.", sc:"短吻鳄有大牙齿。", c:"短吻鳄"},
+    {w:"ax", s:"He cuts wood with an ax.", sc:"他用斧头砍木头。", c:"斧头"}
+  ]},
+  {id:"Bb",cat:"letter",label:"Bb",sound:"/b/",
+   items:[
+    {w:"boy", s:"The boy is playing outside.", sc:"男孩在外面玩。", c:"男孩"},
+    {w:"bike", s:"I ride my bike to school.", sc:"我骑自行车上学。", c:"自行车"},
+    {w:"bus", s:"The bus is yellow.", sc:"公共汽车是黄色的。", c:"公共汽车"},
+    {w:"bag", s:"I put my book in the bag.", sc:"我把书放进包里。", c:"包"}
+  ]},
+  {id:"Cc",cat:"letter",label:"Cc",sound:"/k/",
+   items:[
+    {w:"car", s:"The car is red.", sc:"这辆车是红色的。", c:"汽车"},
+    {w:"cup", s:"I drink from a cup.", sc:"我用杯子喝水。", c:"杯子"},
+    {w:"cat", s:"The cat is sleeping.", sc:"猫在睡觉。", c:"猫"},
+    {w:"cow", s:"The cow eats grass.", sc:"牛在吃草。", c:"奶牛"}
+  ]},
+  {id:"Dd",cat:"letter",label:"Dd",sound:"/d/",
+   items:[
+    {w:"dog", s:"The dog runs fast.", sc:"狗跑得很快。", c:"狗"},
+    {w:"duck", s:"A duck is in the pond.", sc:"一只鸭子在池塘里。", c:"鸭子"},
+    {w:"doll", s:"She plays with her doll.", sc:"她在玩她的娃娃。", c:"娃娃"},
+    {w:"dinosaur", s:"The dinosaur is big.", sc:"恐龙很大。", c:"恐龙"}
+  ]},
+  {id:"Ee",cat:"letter",label:"Ee",sound:"/e/",
+   items:[
+    {w:"egg", s:"I eat an egg for breakfast.", sc:"我早餐吃一个鸡蛋。", c:"鸡蛋"},
+    {w:"elephant", s:"The elephant is huge.", sc:"大象很大。", c:"大象"},
+    {w:"elk", s:"An elk has big antlers.", sc:"麋鹿有大鹿角。", c:"麋鹿"},
+    {w:"elf", s:"The elf is tiny.", sc:"精灵很小。", c:"小精灵"}
+  ]},
+  {id:"Ff",cat:"letter",label:"Ff",sound:"/f/",
+   items:[
+    {w:"farm", s:"We live on a farm.", sc:"我们住在农场。", c:"农场"},
+    {w:"flower", s:"The flower is pretty.", sc:"这朵花很漂亮。", c:"花"},
+    {w:"frog", s:"The frog jumps into the water.", sc:"青蛙跳进水里。", c:"青蛙"},
+    {w:"fish", s:"The fish swim in the lake.", sc:"鱼在湖里游。", c:"鱼"}
+  ]},
+  {id:"Gg",cat:"letter",label:"Gg",sound:"/g/",
+   items:[
+    {w:"garden", s:"I play in the garden.", sc:"我在花园里玩。", c:"花园"},
+    {w:"goose", s:"The goose is loud.", sc:"鹅的声音很大。", c:"鹅"},
+    {w:"goat", s:"A goat climbs the hill.", sc:"山羊爬上了山。", c:"山羊"},
+    {w:"gorilla", s:"The gorilla is strong.", sc:"大猩猩很强壮。", c:"大猩猩"}
+  ]},
+  {id:"Hh",cat:"letter",label:"Hh",sound:"/h/",
+   items:[
+    {w:"hippo", s:"The hippo is in the water.", sc:"河马在水里。", c:"河马"},
+    {w:"horse", s:"I ride a horse.", sc:"我骑马。", c:"马"},
+    {w:"house", s:"I live in a house.", sc:"我住在房子里。", c:"房子"},
+    {w:"hen", s:"The hen lays an egg.", sc:"母鸡下了一个蛋。", c:"母鸡"}
+  ]},
+  {id:"Ii",cat:"letter",label:"Ii",sound:"/ɪ/",
+   items:[
+    {w:"India", s:"India is a big country.", sc:"印度是一个大国。", c:"印度"},
+    {w:"iguana", s:"An iguana sits on the rock.", sc:"一只鬣蜥坐在岩石上。", c:"鬣蜥"},
+    {w:"insect", s:"The insect is very small.", sc:"昆虫非常小。", c:"昆虫"},
+    {w:"igloo", s:"We built an igloo in the snow.", sc:"我们在雪地里建了一个冰屋。", c:"冰屋"}
+  ]},
+  {id:"Jj",cat:"letter",label:"Jj",sound:"/dʒ/",
+   items:[
+    {w:"juice", s:"I drink orange juice.", sc:"我喝橙汁。", c:"果汁"},
+    {w:"jam", s:"I put jam on my bread.", sc:"我把果酱涂在面包上。", c:"果酱"},
+    {w:"jacket", s:"I wear a jacket in winter.", sc:"冬天我穿夹克。", c:"夹克"},
+    {w:"jeep", s:"He drives a jeep.", sc:"他开吉普车。", c:"吉普车"}
+  ]},
+  {id:"Kk",cat:"letter",label:"Kk",sound:"/k/",
+   items:[
+    {w:"kite", s:"I fly a kite in the park.", sc:"我在公园放风筝。", c:"风筝"},
+    {w:"kid", s:"The kid is laughing.", sc:"小孩在笑。", c:"小孩"},
+    {w:"kangaroo", s:"A kangaroo can jump high.", sc:"袋鼠能跳得很高。", c:"袋鼠"},
+    {w:"koala", s:"The koala sleeps in a tree.", sc:"考拉在树上睡觉。", c:"考拉"}
+  ]},
+  {id:"Ll",cat:"letter",label:"Ll",sound:"/l/",
+   items:[
+    {w:"lake", s:"We swim in the lake.", sc:"我们在湖里游泳。", c:"湖"},
+    {w:"ladybug", s:"A ladybug is on the leaf.", sc:"一只瓢虫在叶子上。", c:"瓢虫"},
+    {w:"lamb", s:"The lamb is soft.", sc:"小羊很柔软。", c:"小羊"},
+    {w:"lion", s:"The lion is the king.", sc:"狮子是百兽之王。", c:"狮子"}
+  ]},
+  {id:"Mm",cat:"letter",label:"Mm",sound:"/m/",
+   items:[
+    {w:"monkey", s:"The monkey eats a banana.", sc:"猴子在吃香蕉。", c:"猴子"},
+    {w:"mango", s:"I like mango juice.", sc:"我喜欢芒果汁。", c:"芒果"},
+    {w:"milk", s:"I drink milk every day.", sc:"我每天喝牛奶。", c:"牛奶"},
+    {w:"music", s:"I like to listen to music.", sc:"我喜欢听音乐。", c:"音乐"}
+  ]},
+  {id:"Nn",cat:"letter",label:"Nn",sound:"/n/",
+   items:[
+    {w:"nurse", s:"The nurse helps sick people.", sc:"护士帮助生病的人。", c:"护士"},
+    {w:"nose", s:"I use my nose to smell.", sc:"我用鼻子闻气味。", c:"鼻子"},
+    {w:"neck", s:"The giraffe has a long neck.", sc:"长颈鹿有长脖子。", c:"脖子"},
+    {w:"nail", s:"I hit the nail with a hammer.", sc:"我用锤子敲钉子。", c:"钉子"}
+  ]},
+  {id:"Oo",cat:"letter",label:"Oo",sound:"/ɑː/",
+   items:[
+    {w:"ox", s:"The ox is pulling a cart.", sc:"公牛在拉车。", c:"公牛"},
+    {w:"ostrich", s:"An ostrich cannot fly.", sc:"鸵鸟不会飞。", c:"鸵鸟"},
+    {w:"otter", s:"The otter swims in the river.", sc:"水獭在河里游泳。", c:"水獭"},
+    {w:"octopus", s:"The octopus has eight arms.", sc:"章鱼有八条触手。", c:"章鱼"}
+  ]},
+  {id:"Pp",cat:"letter",label:"Pp",sound:"/p/",
+   items:[
+    {w:"pencil", s:"I write with a pencil.", sc:"我用铅笔写字。", c:"铅笔"},
+    {w:"panda", s:"The panda eats bamboo.", sc:"熊猫吃竹子。", c:"熊猫"},
+    {w:"penguin", s:"Penguins live in the cold.", sc:"企鹅生活在寒冷的地方。", c:"企鹅"},
+    {w:"parrot", s:"The parrot can talk.", sc:"鹦鹉会说话。", c:"鹦鹉"}
+  ]},
+  {id:"Qq",cat:"letter",label:"Qq",sound:"/kw/",
+   items:[
+    {w:"quiz", s:"We took a quiz in class.", sc:"我们在班上做了小测验。", c:"小测验"},
+    {w:"question", s:"I have a question.", sc:"我有个问题。", c:"问题"},
+    {w:"quail", s:"A quail is a small bird.", sc:"鹌鹑是一种小鸟。", c:"鹌鹑"},
+    {w:"queen", s:"The queen wears a crown.", sc:"女王戴着王冠。", c:"女王"}
+  ]},
+  {id:"Rr",cat:"letter",label:"Rr",sound:"/r/",
+   items:[
+    {w:"robot", s:"The robot can walk.", sc:"机器人会走路。", c:"机器人"},
+    {w:"rat", s:"A rat ran across the floor.", sc:"一只老鼠跑过地板。", c:"老鼠"},
+    {w:"rhino", s:"The rhino has a horn.", sc:"犀牛有角。", c:"犀牛"},
+    {w:"rabbit", s:"The rabbit hops quickly.", sc:"兔子跳得很快。", c:"兔子"}
+  ]},
+  {id:"Ss",cat:"letter",label:"Ss",sound:"/s/",
+   items:[
+    {w:"sun", s:"The sun is shining.", sc:"太阳在照耀。", c:"太阳"},
+    {w:"sad", s:"The girl is sad today.", sc:"女孩今天很难过。", c:"悲伤的"},
+    {w:"sand", s:"I play in the sand.", sc:"我在沙子里玩。", c:"沙子"},
+    {w:"soap", s:"I wash my hands with soap.", sc:"我用肥皂洗手。", c:"肥皂"}
+  ]},
+  {id:"Tt",cat:"letter",label:"Tt",sound:"/t/",
+   items:[
+    {w:"tent", s:"We sleep in a tent.", sc:"我们在帐篷里睡觉。", c:"帐篷"},
+    {w:"turtle", s:"The turtle moves slowly.", sc:"乌龟行动缓慢。", c:"乌龟"},
+    {w:"tiger", s:"The tiger has stripes.", sc:"老虎有条纹。", c:"老虎"},
+    {w:"turkey", s:"We eat turkey on holidays.", sc:"我们过节时吃火鸡。", c:"火鸡"}
+  ]},
+  {id:"Uu",cat:"letter",label:"Uu",sound:"/ʌ/",
+   items:[
+    {w:"uncle", s:"My uncle came to visit.", sc:"我叔叔来看我了。", c:"叔叔"},
+    {w:"under", s:"The cat is under the table.", sc:"猫在桌子下面。", c:"在…下面"},
+    {w:"up", s:"I look up at the sky.", sc:"我抬头看天空。", c:"向上"},
+    {w:"umbrella", s:"I use an umbrella in the rain.", sc:"下雨时我用雨伞。", c:"雨伞"}
+  ]},
+  {id:"Vv",cat:"letter",label:"Vv",sound:"/v/",
+   items:[
+    {w:"video", s:"I watch a video online.", sc:"我在网上看视频。", c:"视频"},
+    {w:"village", s:"We live in a small village.", sc:"我们住在一个小村庄。", c:"村庄"},
+    {w:"valley", s:"The valley is between hills.", sc:"山谷在两座山之间。", c:"山谷"},
+    {w:"volcano", s:"The volcano is hot.", sc:"火山很热。", c:"火山"}
+  ]},
+  {id:"Ww",cat:"letter",label:"Ww",sound:"/w/",
+   items:[
+    {w:"wig", s:"She wears a red wig.", sc:"她戴着一顶红色假发。", c:"假发"},
+    {w:"witch", s:"The witch rides a broom.", sc:"女巫骑着一把扫帚。", c:"女巫"},
+    {w:"wolf", s:"The wolf howls at night.", sc:"狼在夜里嚎叫。", c:"狼"},
+    {w:"web", s:"A spider made a web.", sc:"蜘蛛织了一张网。", c:"网"}
+  ]},
+  {id:"Xx",cat:"letter",label:"Xx",sound:"/ks/",
+   items:[
+    {w:"fox", s:"The fox is orange.", sc:"狐狸是橙色的。", c:"狐狸"},
+    {w:"six", s:"I have six books.", sc:"我有六本书。", c:"六"},
+    {w:"box", s:"I put toys in the box.", sc:"我把玩具放进盒子里。", c:"盒子"},
+    {w:"sax", s:"He plays the sax.", sc:"他吹萨克斯管。", c:"萨克斯管"}
+  ]},
+  {id:"Yy",cat:"letter",label:"Yy",sound:"/j/",
+   items:[
+    {w:"yo-yo", s:"I play with a yo-yo.", sc:"我玩悠悠球。", c:"悠悠球"},
+    {w:"yellow", s:"The sun is yellow.", sc:"太阳是黄色的。", c:"黄色的"},
+    {w:"yak", s:"The yak lives in the mountains.", sc:"牦牛生活在山上。", c:"牦牛"},
+    {w:"yogurt", s:"I eat yogurt for breakfast.", sc:"我早餐吃酸奶。", c:"酸奶"}
+  ]},
+  {id:"Zz",cat:"letter",label:"Zz",sound:"/z/",
+   items:[
+    {w:"zebra", s:"A zebra has black and white stripes.", sc:"斑马有黑白条纹。", c:"斑马"},
+    {w:"zero", s:"The number is zero.", sc:"这个数字是零。", c:"零"},
+    {w:"zone", s:"This is a no-parking zone.", sc:"这是禁停区。", c:"区域"},
+    {w:"zoo", s:"We go to the zoo on Sunday.", sc:"我们星期天去动物园。", c:"动物园"}
+  ]},
+
+  // ===== SHORT VOWELS (~35) =====
+  {id:"ad",cat:"short",label:"ad",sound:"/æd/",
+   items:[
+    {w:"dad", s:"My dad has a hat.", sc:"我爸爸有一顶帽子。", c:"爸爸"},
+    {w:"mad", s:"I am not mad.", sc:"我没有生气。", c:"生气的"},
+    {w:"sad", s:"The boy feels sad.", sc:"男孩感到难过。", c:"难过的"}
+  ]},
+  {id:"ag",cat:"short",label:"ag",sound:"/æg/",
+   items:[
+    {w:"bag", s:"He opens his bag.", sc:"他打开他的包。", c:"包"},
+    {w:"tag", s:"I have a name tag.", sc:"我有一个姓名标签。", c:"标签"},
+    {w:"rag", s:"He cleans with a rag.", sc:"他用抹布清洁。", c:"抹布"}
+  ]},
+  {id:"at",cat:"short",label:"at",sound:"/æt/",
+   items:[
+    {w:"mat", s:"He sits on the mat.", sc:"他坐在垫子上。", c:"垫子"},
+    {w:"hat", s:"She wears a red hat.", sc:"她戴着一顶红帽子。", c:"帽子"},
+    {w:"rat", s:"Out comes a rat!", sc:"出来了一只老鼠！", c:"老鼠"}
+  ]},
+  {id:"am",cat:"short",label:"am",sound:"/æm/",
+   items:[
+    {w:"dam", s:"The beaver built a dam.", sc:"海狸建了一座水坝。", c:"水坝"},
+    {w:"ham", s:"A dog eats his ham.", sc:"一只狗吃了他的火腿。", c:"火腿"},
+    {w:"jam", s:"A cat eats his jam.", sc:"一只猫吃了他的果酱。", c:"果酱"}
+  ]},
+  {id:"an",cat:"short",label:"an",sound:"/æn/",
+   items:[
+    {w:"man", s:"A man takes a nap.", sc:"一个男人在打盹。", c:"男人"},
+    {w:"fan", s:"I turn on the fan.", sc:"我打开风扇。", c:"风扇"},
+    {w:"pan", s:"The man chases them with a pan.", sc:"男人拿着平底锅追它们。", c:"平底锅"}
+  ]},
+  {id:"ap",cat:"short",label:"ap",sound:"/æp/",
+   items:[
+    {w:"map", s:"I look at the map.", sc:"我看地图。", c:"地图"},
+    {w:"cap", s:"He wears a blue cap.", sc:"他戴着一顶蓝色帽子。", c:"帽子"},
+    {w:"nap", s:"The baby takes a nap.", sc:"宝宝在打盹。", c:"小睡"}
+  ]},
+  {id:"ed",cat:"short",label:"ed",sound:"/ed/",
+   items:[
+    {w:"Ted", s:"Ted has a hen.", sc:"泰德有一只母鸡。", c:"泰德（人名）"},
+    {w:"red", s:"Ted's hen is red.", sc:"泰德的母鸡是红色的。", c:"红色的"},
+    {w:"bed", s:"Meg's pen is on the bed.", sc:"梅格的笔在床上。", c:"床"}
+  ]},
+  {id:"eg",cat:"short",label:"eg",sound:"/eg/",
+   items:[
+    {w:"Meg", s:"Meg has a pen.", sc:"梅格有一支钢笔。", c:"梅格（人名）"},
+    {w:"leg", s:"The dog hurts its leg.", sc:"狗弄伤了腿。", c:"腿"},
+    {w:"peg", s:"I hang my coat on a peg.", sc:"我把外套挂在挂钩上。", c:"挂钩"}
+  ]},
+  {id:"en",cat:"short",label:"en",sound:"/en/",
+   items:[
+    {w:"hen", s:"Ted has a hen.", sc:"泰德有一只母鸡。", c:"母鸡"},
+    {w:"pen", s:"Meg has a pen.", sc:"梅格有一支钢笔。", c:"钢笔"},
+    {w:"ten", s:"I have ten fingers.", sc:"我有十根手指。", c:"十"}
+  ]},
+  {id:"et",cat:"short",label:"et",sound:"/et/",
+   items:[
+    {w:"jet", s:"The jet flies fast.", sc:"喷气机飞得很快。", c:"喷气机"},
+    {w:"vet", s:"The vet rings the bell.", sc:"兽医按响了铃。", c:"兽医"},
+    {w:"pet", s:"I have a pet cat.", sc:"我有一只宠物猫。", c:"宠物"}
+  ]},
+  {id:"ell",cat:"short",label:"ell",sound:"/el/",
+   items:[
+    {w:"bell", s:"A vet rings the bell.", sc:"兽医按响了铃。", c:"铃铛"},
+    {w:"sell", s:"I want to sell my bike.", sc:"我想卖掉我的自行车。", c:"卖"},
+    {w:"well", s:"The cat runs around the well.", sc:"猫绕着井跑。", c:"井"}
+  ]},
+  {id:"ess",cat:"short",label:"ess",sound:"/es/",
+   items:[
+    {w:"mess", s:"What a mess!", sc:"真是一团糟！", c:"混乱"},
+    {w:"dress", s:"She wears a pretty dress.", sc:"她穿着一条漂亮的裙子。", c:"裙子"},
+    {w:"chess", s:"We play chess together.", sc:"我们一起下国际象棋。", c:"国际象棋"}
+  ]},
+  {id:"ig",cat:"short",label:"ig",sound:"/ɪg/",
+   items:[
+    {w:"pig", s:"The pig has a wig.", sc:"猪戴着一顶假发。", c:"猪"},
+    {w:"big", s:"He wears a big bib.", sc:"他戴着一条大围兜。", c:"大的"},
+    {w:"wig", s:"The pig has a wig.", sc:"猪戴着一顶假发。", c:"假发"}
+  ]},
+  {id:"in",cat:"short",label:"in",sound:"/ɪn/",
+   items:[
+    {w:"pin", s:"I put a pin on the map.", sc:"我在地图上插了一根大头针。", c:"大头针"},
+    {w:"bin", s:"He throws it into the bin.", sc:"他把它扔进垃圾桶。", c:"垃圾桶"},
+    {w:"tin", s:"He gets candies from a tin.", sc:"他从罐子里拿出糖果。", c:"罐子"}
+  ]},
+  {id:"ib",cat:"short",label:"ib",sound:"/ɪb/",
+   items:[
+    {w:"bib", s:"He wears a big bib.", sc:"他戴着一条大围兜。", c:"围兜"},
+    {w:"rib", s:"I hurt my rib.", sc:"我弄伤了肋骨。", c:"肋骨"}
+  ]},
+  {id:"ip",cat:"short",label:"ip",sound:"/ɪp/",
+   items:[
+    {w:"lip", s:"She has a smile on her lip.", sc:"她嘴角带着微笑。", c:"嘴唇"},
+    {w:"sip", s:"I take a sip of water.", sc:"我喝了一小口水。", c:"小口喝"},
+    {w:"zip", s:"A zip is in the kit.", sc:"工具包里有一条拉链。", c:"拉链"}
+  ]},
+  {id:"id",cat:"short",label:"id",sound:"/ɪd/",
+   items:[
+    {w:"lid", s:"He lifts the lid.", sc:"他掀开盖子。", c:"盖子"},
+    {w:"kid", s:"The kid is playing.", sc:"小孩在玩。", c:"小孩"},
+    {w:"bid", s:"He makes a bid at the auction.", sc:"他在拍卖会上出价。", c:"出价"}
+  ]},
+  {id:"it",cat:"short",label:"it",sound:"/ɪt/",
+   items:[
+    {w:"hit", s:"Do not hit the table.", sc:"别打桌子。", c:"打"},
+    {w:"sit", s:"Sit down, please.", sc:"请坐下。", c:"坐"},
+    {w:"kit", s:"A zip is in the kit.", sc:"工具包里有一条拉链。", c:"工具包"}
+  ]},
+  {id:"ix",cat:"short",label:"ix",sound:"/ɪks/",
+   items:[
+    {w:"six", s:"I see six birds.", sc:"我看到六只鸟。", c:"六"},
+    {w:"fix", s:"I can fix the toy.", sc:"我能修好这个玩具。", c:"修理"},
+    {w:"mix", s:"Mix the colors together.", sc:"把颜色混合在一起。", c:"混合"}
+  ]},
+  {id:"im",cat:"short",label:"im",sound:"/ɪm/",
+   items:[
+    {w:"Tim", s:"Tim wants to join him.", sc:"蒂姆想加入他。", c:"蒂姆（人名）"},
+    {w:"swim", s:"Jim is going to swim.", sc:"吉姆要去游泳。", c:"游泳"},
+    {w:"him", s:"Tim wants to join him.", sc:"蒂姆想加入他。", c:"他（宾格）"}
+  ]},
+  {id:"ill",cat:"short",label:"ill",sound:"/ɪl/",
+   items:[
+    {w:"pill", s:"Take one pill a day.", sc:"每天吃一片药。", c:"药片"},
+    {w:"mill", s:"They see six mills.", sc:"他们看到六个磨坊。", c:"磨坊"},
+    {w:"hill", s:"They go near a hill.", sc:"他们走到一座小山附近。", c:"小山"}
+  ]},
+  {id:"op",cat:"short",label:"op",sound:"/ɒp/",
+   items:[
+    {w:"hop", s:"The frog likes to hop.", sc:"青蛙喜欢跳。", c:"跳"},
+    {w:"mop", s:"It hops on a mop.", sc:"它跳上拖把。", c:"拖把"},
+    {w:"top", s:"It hops on the top.", sc:"它跳到了顶上。", c:"顶部"}
+  ]},
+  {id:"ot",cat:"short",label:"ot",sound:"/ɒt/",
+   items:[
+    {w:"pot", s:"It hops on a pot.", sc:"它跳到一个锅上。", c:"锅"},
+    {w:"hot", s:"The water is hot!", sc:"水是烫的！", c:"热的"},
+    {w:"dot", s:"I draw a dot on the paper.", sc:"我在纸上画了一个点。", c:"点"}
+  ]},
+  {id:"og",cat:"short",label:"og",sound:"/ɒg/",
+   items:[
+    {w:"jog", s:"I like to jog in the park.", sc:"我喜欢在公园里慢跑。", c:"慢跑"},
+    {w:"fog", s:"It is hard to see in the fog.", sc:"雾中很难看清。", c:"雾"},
+    {w:"frog", s:"The frog jumps high.", sc:"青蛙跳得很高。", c:"青蛙"}
+  ]},
+  {id:"ox_short",cat:"short",label:"ox",sound:"/ɒks/",
+   items:[
+    {w:"fox", s:"A fox robs the box.", sc:"狐狸抢走了盒子。", c:"狐狸"},
+    {w:"box", s:"Bob has a big box.", sc:"鲍勃有一个大盒子。", c:"盒子"}
+  ]},
+  {id:"od",cat:"short",label:"od",sound:"/ɒd/",
+   items:[
+    {w:"nod", s:"I nod my head.", sc:"我点点头。", c:"点头"},
+    {w:"rod", s:"He holds a fishing rod.", sc:"他握着一根钓鱼竿。", c:"杆"},
+    {w:"cod", s:"The box is full of cods.", sc:"盒子里装满了鳕鱼。", c:"鳕鱼"}
+  ]},
+  {id:"ob",cat:"short",label:"ob",sound:"/ɒb/",
+   items:[
+    {w:"job", s:"Bob has a job.", sc:"鲍勃有一份工作。", c:"工作"},
+    {w:"sob", s:"Bob sobs and chases the fox.", sc:"鲍勃哭着追狐狸。", c:"啜泣"},
+    {w:"rob", s:"A fox robs Bob.", sc:"狐狸抢劫了鲍勃。", c:"抢劫"}
+  ]},
+  {id:"ug",cat:"short",label:"ug",sound:"/ʌg/",
+   items:[
+    {w:"bug", s:"A bug is on the rug!", sc:"地毯上有一只虫子！", c:"虫子"},
+    {w:"mug", s:"A mug is on the bus.", sc:"公交车上有一个杯子。", c:"杯子"},
+    {w:"rug", s:"A hut is on a rug.", sc:"小屋在地毯上。", c:"地毯"}
+  ]},
+  {id:"ut",cat:"short",label:"ut",sound:"/ʌt/",
+   items:[
+    {w:"hut", s:"A hut is on a rug.", sc:"小屋在地毯上。", c:"小屋"},
+    {w:"cut", s:"Cut the paper with scissors.", sc:"用剪刀剪纸。", c:"切"},
+    {w:"nut", s:"A nut is on the mug.", sc:"杯子上有一颗坚果。", c:"坚果"}
+  ]},
+  {id:"us",cat:"short",label:"us",sound:"/ʌs/",
+   items:[
+    {w:"bus", s:"A bus is on the roof.", sc:"一辆公交车在屋顶上。", c:"公共汽车"},
+    {w:"plus", s:"Two plus two is four.", sc:"二加二等于四。", c:"加"}
+  ]},
+  {id:"um",cat:"short",label:"um",sound:"/ʌm/",
+   items:[
+    {w:"gum", s:"I chew gum.", sc:"我嚼口香糖。", c:"口香糖"},
+    {w:"bum", s:"A bum has a bun.", sc:"流浪汉有一个小面包。", c:"流浪汉"},
+    {w:"drum", s:"I play the drum.", sc:"我打鼓。", c:"鼓"}
+  ]},
+  {id:"un",cat:"short",label:"un",sound:"/ʌn/",
+   items:[
+    {w:"bun", s:"He feeds the gull with a bun.", sc:"他用小面包喂海鸥。", c:"小圆面包"},
+    {w:"sun", s:"The sun is bright.", sc:"太阳很明亮。", c:"太阳"},
+    {w:"fun", s:"What great fun!", sc:"太好玩了！", c:"乐趣"}
+  ]},
+  {id:"ull",cat:"short",label:"ull",sound:"/ʌl/",
+   items:[
+    {w:"gull", s:"A gull flies in the sun.", sc:"一只海鸥在阳光下飞翔。", c:"海鸥"},
+    {w:"dull", s:"The movie is dull.", sc:"这部电影很枯燥。", c:"枯燥的"}
+  ]},
+  {id:"up",cat:"short",label:"up",sound:"/ʌp/",
+   items:[
+    {w:"cup", s:"I drink from a cup.", sc:"我用杯子喝水。", c:"杯子"},
+    {w:"pup", s:"Bud has a pup.", sc:"巴德有一只小狗。", c:"小狗"}
+  ]},
+  {id:"ub",cat:"short",label:"ub",sound:"/ʌb/",
+   items:[
+    {w:"cub", s:"The lion cub is cute.", sc:"小狮子很可爱。", c:"幼崽"},
+    {w:"tub", s:"I wash in the tub.", sc:"我在浴缸里洗澡。", c:"浴缸"},
+    {w:"rub", s:"Rub your hands together.", sc:"搓搓你的手。", c:"摩擦"}
+  ]},
+  {id:"ud",cat:"short",label:"ud",sound:"/ʌd/",
+   items:[
+    {w:"bud", s:"The flower bud is opening.", sc:"花蕾正在绽放。", c:"花蕾"},
+    {w:"mud", s:"It plays in the mud.", sc:"它在泥里玩。", c:"泥"}
+  ]},
+
+  // ===== LONG VOWELS (5) =====
+  {id:"a_e",cat:"long",label:"a_e",sound:"/eɪ/",
+   items:[
+    {w:"tape", s:"I use tape to fix the paper.", sc:"我用胶带把纸粘好。", c:"胶带"},
+    {w:"cape", s:"An ape wears a cape.", sc:"猿披着一件披风。", c:"披风"},
+    {w:"game", s:"An ape plays the game.", sc:"猿在玩游戏。", c:"游戏"},
+    {w:"name", s:"What is your name?", sc:"你叫什么名字？", c:"名字"},
+    {w:"bake", s:"An ape bakes a cake.", sc:"猿在烤蛋糕。", c:"烘焙"},
+    {w:"cake", s:"An ape bakes a cake.", sc:"猿在烤蛋糕。", c:"蛋糕"},
+    {w:"cave", s:"Apes are in the cave.", sc:"猿在洞穴里。", c:"洞穴"},
+    {w:"wave", s:"I wave goodbye.", sc:"我挥手告别。", c:"挥手"}
+  ]},
+  {id:"e_e",cat:"long",label:"e_e",sound:"/iː/",
+   items:[
+    {w:"eve", s:"It's Christmas eve!", sc:"今天是圣诞前夕！", c:"前夕"},
+    {w:"Steve", s:"Steve has a house.", sc:"史蒂夫有一栋房子。", c:"史蒂夫（人名）"},
+    {w:"gene", s:"The gene determines eye color.", sc:"基因决定眼睛颜色。", c:"基因"},
+    {w:"scene", s:"He's enjoying the scene.", sc:"他在享受景色。", c:"场景"},
+    {w:"Pete", s:"Where is Pete?", sc:"皮特在哪里？", c:"皮特（人名）"},
+    {w:"Chinese", s:"I like Chinese food.", sc:"我喜欢中餐。", c:"中文的"},
+    {w:"theme", s:"What is the theme of the party?", sc:"派对的主题是什么？", c:"主题"},
+    {w:"Swede", s:"A Swede is from Sweden.", sc:"瑞典人来自瑞典。", c:"瑞典人"}
+  ]},
+  {id:"i_e",cat:"long",label:"i_e",sound:"/aɪ/",
+   items:[
+    {w:"time", s:"We eat five limes at a time.", sc:"我们一次吃五个酸橙。", c:"时间"},
+    {w:"lime", s:"We eat five limes.", sc:"我们吃了五个酸橙。", c:"酸橙"},
+    {w:"nine", s:"We buy a kite with nine dimes.", sc:"我们用九角钱买了一个风筝。", c:"九"},
+    {w:"pine", s:"The pine tree is tall.", sc:"松树很高。", c:"松树"},
+    {w:"ride", s:"We like to ride our bikes.", sc:"我们喜欢骑自行车。", c:"骑"},
+    {w:"bike", s:"We like to ride on my bike.", sc:"我们喜欢骑我的自行车。", c:"自行车"},
+    {w:"five", s:"I have five fingers.", sc:"我有五根手指。", c:"五"},
+    {w:"kite", s:"We buy a kite.", sc:"我们买了一个风筝。", c:"风筝"}
+  ]},
+  {id:"o_e",cat:"long",label:"o_e",sound:"/əʊ/",
+   items:[
+    {w:"bone", s:"The dog has a bone.", sc:"狗有一根骨头。", c:"骨头"},
+    {w:"cone", s:"I eat an ice cream cone.", sc:"我吃甜筒冰淇淋。", c:"圆锥体"},
+    {w:"rose", s:"A hose and a rose.", sc:"一根水管和一朵玫瑰。", c:"玫瑰"},
+    {w:"hose", s:"I water with a hose.", sc:"我用水管浇水。", c:"水管"},
+    {w:"hole", s:"There is a hole in my sock.", sc:"我的袜子上有一个洞。", c:"洞"},
+    {w:"note", s:"I write a note.", sc:"我写了一张便条。", c:"笔记"},
+    {w:"home", s:"I go home after school.", sc:"放学后我回家。", c:"家"},
+    {w:"rope", s:"I jump rope.", sc:"我跳绳。", c:"绳子"}
+  ]},
+  {id:"u_e",cat:"long",label:"u_e",sound:"/juː/",
+   items:[
+    {w:"cube", s:"A mule sees a cube.", sc:"骡子看到一个立方体。", c:"立方体"},
+    {w:"cute", s:"What a cute mule!", sc:"多可爱的骡子啊！", c:"可爱的"},
+    {w:"tune", s:"He plays a tune.", sc:"他弹奏了一首曲子。", c:"曲调"},
+    {w:"tube", s:"He finds a tube.", sc:"他发现了一根管子。", c:"管子"},
+    {w:"mule", s:"A mule sees a cube.", sc:"骡子看到一个立方体。", c:"骡子"},
+    {w:"mute", s:"I mute the TV.", sc:"我把电视静音了。", c:"静音"}
+  ]},
+  {id:"u_e_u",cat:"long",label:"u_e (/uː/)",sound:"/uː/",
+   items:[
+    {w:"June", s:"My birthday is in June.", sc:"我的生日在六月。", c:"六月"},
+    {w:"rule", s:"Follow the rule.", sc:"遵守规则。", c:"规则"},
+    {w:"blue", s:"The sky is blue.", sc:"天空是蓝色的。", c:"蓝色"},
+    {w:"flute", s:"She plays the flute.", sc:"她吹长笛。", c:"长笛"},
+    {w:"prune", s:"I eat a prune.", sc:"我吃了一颗西梅。", c:"西梅干"},
+    {w:"brute", s:"The brute is strong.", sc:"这个粗暴的家伙很强壮。", c:"粗暴的人"}
+  ]},
+
+  // ===== VOWEL COMBOS (~15) =====
+  {id:"ai",cat:"vowel",label:"ai",sound:"/eɪ/",
+   items:[
+    {w:"rain", s:"What about a rainy day?", sc:"那下雨天呢？", c:"雨"},
+    {w:"wait", s:"They wait and stay.", sc:"他们等着并留下来。", c:"等待"},
+    {w:"tail", s:"The dog wags its tail.", sc:"狗摇着尾巴。", c:"尾巴"},
+    {w:"snail", s:"Two snails play on the bay.", sc:"两只蜗牛在海湾玩耍。", c:"蜗牛"}
+  ]},
+  {id:"ay",cat:"vowel",label:"ay",sound:"/eɪ/",
+   items:[
+    {w:"May", s:"May is a spring month.", sc:"五月是春季。", c:"五月"},
+    {w:"bay", s:"Two snails play on the bay.", sc:"两只蜗牛在海湾玩耍。", c:"海湾"},
+    {w:"day", s:"What a nice day!", sc:"多美好的一天！", c:"天"},
+    {w:"play", s:"Two snails play on the bay.", sc:"两只蜗牛在海湾玩耍。", c:"玩"}
+  ]},
+  {id:"ee",cat:"vowel",label:"ee",sound:"/iː/",
+   items:[
+    {w:"bee", s:"A bee is on the flower.", sc:"一只蜜蜂在花上。", c:"蜜蜂"},
+    {w:"green", s:"The grass is green.", sc:"草是绿色的。", c:"绿色的"},
+    {w:"tree", s:"A sheep finds a pea under the tree.", sc:"一只羊在树下找到一颗豌豆。", c:"树"},
+    {w:"sheep", s:"A sheep finds a pea.", sc:"一只羊找到了一颗豌豆。", c:"羊"}
+  ]},
+  {id:"ea",cat:"vowel",label:"ea",sound:"/iː/",
+   items:[
+    {w:"sea", s:"He drops it in the sea.", sc:"他把它掉进了海里。", c:"海"},
+    {w:"pea", s:"A sheep finds a pea.", sc:"一只羊找到了一颗豌豆。", c:"豌豆"},
+    {w:"tea", s:"They share two cups of tea.", sc:"他们分享两杯茶。", c:"茶"},
+    {w:"leaf", s:"The leaf is green.", sc:"叶子是绿色的。", c:"叶子"}
+  ]},
+  {id:"ie",cat:"vowel",label:"ie",sound:"/aɪ/",
+   items:[
+    {w:"pie", s:"I like apples in the pie.", sc:"我喜欢派里的苹果。", c:"派"},
+    {w:"tie", s:"I wear a tie to work.", sc:"我系领带上班。", c:"领带"},
+    {w:"lie", s:"Do not tell a lie.", sc:"不要说谎。", c:"说谎"}
+  ]},
+  {id:"igh",cat:"vowel",label:"igh",sound:"/aɪ/",
+   items:[
+    {w:"high", s:"I like mountains that are high.", sc:"我喜欢高高的山。", c:"高的"},
+    {w:"night", s:"The stars are out at night.", sc:"晚上星星出来了。", c:"夜晚"},
+    {w:"light", s:"I like the bright light.", sc:"我喜欢明亮的光。", c:"光"}
+  ]},
+  {id:"y_ai",cat:"vowel",label:"y (/aɪ/)",sound:"/aɪ/",
+   items:[
+    {w:"fly", s:"I like kites flying in the sky.", sc:"我喜欢风筝在天空飞翔。", c:"飞"},
+    {w:"sky", s:"The sky is blue.", sc:"天空是蓝色的。", c:"天空"},
+    {w:"cry", s:"Do not cry, it is okay.", sc:"别哭，没事的。", c:"哭"}
+  ]},
+  {id:"oa",cat:"vowel",label:"oa",sound:"/əʊ/",
+   items:[
+    {w:"goat", s:"A goat is on the road.", sc:"一只山羊在路上。", c:"山羊"},
+    {w:"road", s:"A goat is on the road.", sc:"一只山羊在路上。", c:"路"},
+    {w:"coat", s:"They see a yellow coat!", sc:"他们看到一件黄色外套！", c:"外套"},
+    {w:"toad", s:"The goat meets a toad.", sc:"山羊遇到了一只蟾蜍。", c:"蟾蜍"}
+  ]},
+  {id:"ow",cat:"vowel",label:"ow",sound:"/əʊ/",
+   items:[
+    {w:"row", s:"I row a boat on the lake.", sc:"我在湖上划船。", c:"划船"},
+    {w:"snow", s:"It is cold and snow falls.", sc:"天很冷，下雪了。", c:"雪"},
+    {w:"crow", s:"The crow is black.", sc:"乌鸦是黑色的。", c:"乌鸦"},
+    {w:"window", s:"I look out the window.", sc:"我看向窗外。", c:"窗户"}
+  ]},
+  {id:"ew",cat:"vowel",label:"ew",sound:"/juː/",
+   items:[
+    {w:"new", s:"She needs a new cue.", sc:"她需要一根新球杆。", c:"新的"},
+    {w:"few", s:"I have a few friends.", sc:"我有几个朋友。", c:"少数"},
+    {w:"dew", s:"The dew is on the grass.", sc:"露水在草地上。", c:"露水"},
+    {w:"Tuesday", s:"Today is Tuesday.", sc:"今天是星期二。", c:"星期二"}
+  ]},
+  {id:"ue",cat:"vowel",label:"ue",sound:"/juː/",
+   items:[
+    {w:"cue", s:"She needs a new cue.", sc:"她需要一根新球杆。", c:"球杆"},
+    {w:"hue", s:"The sky has a blue hue.", sc:"天空带有一抹蓝色。", c:"色调"},
+    {w:"fuel", s:"The car needs fuel.", sc:"车需要加油。", c:"燃料"}
+  ]},
+  {id:"ue_u",cat:"vowel",label:"ue (/uː/)",sound:"/uː/",
+   items:[
+    {w:"blue", s:"The sky is blue.", sc:"天空是蓝色的。", c:"蓝色"},
+    {w:"clue", s:"The kids have no clue.", sc:"孩子们毫不知情。", c:"线索"},
+    {w:"glue", s:"I use glue to fix it.", sc:"我用胶水把它粘好。", c:"胶水"},
+    {w:"true", s:"It is a true story.", sc:"这是一个真实的故事。", c:"真实的"},
+    {w:"Sue", s:"Where is Sue?", sc:"苏在哪里？", c:"苏（人名）"},
+    {w:"flue", s:"The flue is blocked.", sc:"烟道堵住了。", c:"烟道"}
+  ]},
+  {id:"ui",cat:"vowel",label:"ui",sound:"/uː/",
+   items:[
+    {w:"suit", s:"She puts on her new suit.", sc:"她穿上她的新套装。", c:"套装"},
+    {w:"juice", s:"I drink apple juice.", sc:"我喝苹果汁。", c:"果汁"},
+    {w:"fruit", s:"She eats the fruit.", sc:"她吃了水果。", c:"水果"},
+    {w:"suitcase", s:"I pack my suitcase.", sc:"我整理我的行李箱。", c:"行李箱"}
+  ]},
+  {id:"oo",cat:"vowel",label:"oo",sound:"/uː/",
+   items:[
+    {w:"zoo", s:"We go to the zoo.", sc:"我们去动物园。", c:"动物园"},
+    {w:"boot", s:"I wear a boot.", sc:"我穿靴子。", c:"靴子"},
+    {w:"food", s:"Mrs. Goose makes some food.", sc:"鹅太太做了一些食物。", c:"食物"},
+    {w:"moon", s:"The moon is round.", sc:"月亮是圆的。", c:"月亮"}
+  ]},
+  {id:"y_i",cat:"vowel",label:"y (/i/)",sound:"/i/",
+   items:[
+    {w:"city", s:"I live in a big city.", sc:"我住在一个大城市里。", c:"城市"},
+    {w:"happy", s:"I feel very happy.", sc:"我感到很开心。", c:"快乐"},
+    {w:"money", s:"The monkey has money.", sc:"猴子有钱。", c:"钱"},
+    {w:"candy", s:"I like to eat candy.", sc:"我喜欢吃糖果。", c:"糖果"},
+    {w:"puppy", s:"The puppy is cute.", sc:"小狗很可爱。", c:"小狗"},
+    {w:"honey", s:"The donkey has no honey.", sc:"驴没有蜂蜜。", c:"蜂蜜"}
+  ]},
+  {id:"ey",cat:"vowel",label:"ey",sound:"/i/",
+   items:[
+    {w:"monkey", s:"A monkey and a donkey meet.", sc:"一只猴子和一只驴相遇了。", c:"猴子"},
+    {w:"donkey", s:"A monkey and a donkey meet.", sc:"一只猴子和一只驴相遇了。", c:"驴"}
+  ]},
+
+  // ===== CONSONANT BLENDS (24) =====
+  {id:"bl",cat:"consonant",label:"bl",sound:"/bl/",
+   items:[
+    {w:"black", s:"The cat is black.", sc:"猫是黑色的。", c:"黑色的"},
+    {w:"block", s:"I build a house with blocks.", sc:"我用积木搭房子。", c:"积木"},
+    {w:"blink", s:"The sun blinks his eyes.", sc:"太阳眨了眨眼睛。", c:"眨眼"}
+  ]},
+  {id:"pl",cat:"consonant",label:"pl",sound:"/pl/",
+   items:[
+    {w:"plum", s:"I eat a sweet plum.", sc:"我吃了一颗甜李子。", c:"李子"},
+    {w:"plane", s:"A plane comes and says hi.", sc:"一架飞机来打招呼。", c:"飞机"},
+    {w:"plant", s:"I water the plant every day.", sc:"我每天给植物浇水。", c:"植物"}
+  ]},
+  {id:"cl",cat:"consonant",label:"cl",sound:"/kl/",
+   items:[
+    {w:"clam", s:"The clam is in the sand.", sc:"蛤蜊在沙子里。", c:"蛤蜊"},
+    {w:"clean", s:"The clouds are clean and white.", sc:"云朵干净又洁白。", c:"干净的"},
+    {w:"cloud", s:"I see a cloud in the sky.", sc:"我看到天上有一朵云。", c:"云"}
+  ]},
+  {id:"fl",cat:"consonant",label:"fl",sound:"/fl/",
+   items:[
+    {w:"fly", s:"A fly flies over the flag.", sc:"一只苍蝇飞过旗帜。", c:"苍蝇"},
+    {w:"flag", s:"The flag is red and white.", sc:"旗帜是红白相间的。", c:"旗帜"},
+    {w:"flower", s:"The flower is beautiful.", sc:"这朵花很漂亮。", c:"花"}
+  ]},
+  {id:"gl",cat:"consonant",label:"gl",sound:"/gl/",
+   items:[
+    {w:"glad", s:"They both feel glad.", sc:"他们俩都很高兴。", c:"高兴的"},
+    {w:"globe", s:"I see the world on a globe.", sc:"我在地球仪上看世界。", c:"地球仪"},
+    {w:"glass", s:"I drink water from a glass.", sc:"我用玻璃杯喝水。", c:"玻璃杯"}
+  ]},
+  {id:"sl",cat:"consonant",label:"sl",sound:"/sl/",
+   items:[
+    {w:"slug", s:"A slug has a flag.", sc:"鼻涕虫有一面旗帜。", c:"鼻涕虫"},
+    {w:"sleep", s:"I sleep at night.", sc:"我晚上睡觉。", c:"睡觉"},
+    {w:"slide", s:"It slides on a bag.", sc:"它在袋子上滑行。", c:"滑行"}
+  ]},
+  {id:"pr",cat:"consonant",label:"pr",sound:"/pr/",
+   items:[
+    {w:"prize", s:"They get a prize and they are proud!", sc:"他们得到了奖品，非常自豪！", c:"奖品"},
+    {w:"prince", s:"The prince lives in a castle.", sc:"王子住在城堡里。", c:"王子"}
+  ]},
+  {id:"br",cat:"consonant",label:"br",sound:"/br/",
+   items:[
+    {w:"bride", s:"The bride looks beautiful.", sc:"新娘看起来很漂亮。", c:"新娘"},
+    {w:"brush", s:"Brad paints it with a brush.", sc:"布拉德用刷子涂色。", c:"刷子"}
+  ]},
+  {id:"cr",cat:"consonant",label:"cr",sound:"/kr/",
+   items:[
+    {w:"crab", s:"The crab walks sideways.", sc:"螃蟹横着走。", c:"螃蟹"},
+    {w:"crayon", s:"What's the prize? Crayons!", sc:"奖品是什么？蜡笔！", c:"蜡笔"}
+  ]},
+  {id:"gr",cat:"consonant",label:"gr",sound:"/gr/",
+   items:[
+    {w:"green", s:"Greg draws a picture of grapes.", sc:"格雷格画了一幅葡萄的画。", c:"绿色的"},
+    {w:"grape", s:"I like to eat grapes.", sc:"我喜欢吃葡萄。", c:"葡萄"}
+  ]},
+  {id:"fr",cat:"consonant",label:"fr",sound:"/fr/",
+   items:[
+    {w:"frown", s:"Don't frown, smile!", sc:"别皱眉，笑一个！", c:"皱眉"},
+    {w:"frog", s:"Fred the frog is from England.", sc:"青蛙弗雷德来自英格兰。", c:"青蛙"},
+    {w:"from", s:"Where are you from?", sc:"你从哪里来？", c:"从…"}
+  ]},
+  {id:"tr",cat:"consonant",label:"tr",sound:"/tr/",
+   items:[
+    {w:"truck", s:"He takes a truck and a train.", sc:"他坐卡车和火车。", c:"卡车"},
+    {w:"train", s:"The train goes fast.", sc:"火车跑得很快。", c:"火车"},
+    {w:"tree", s:"The tree is tall.", sc:"这棵树很高。", c:"树"}
+  ]},
+  {id:"dr",cat:"consonant",label:"dr",sound:"/dr/",
+   items:[
+    {w:"drain", s:"They play drums by a drain.", sc:"他们在水沟边打鼓。", c:"排水沟"},
+    {w:"drive", s:"I want to drive a car.", sc:"我想开车。", c:"驾驶"},
+    {w:"drink", s:"I drink water every day.", sc:"我每天喝水。", c:"喝"}
+  ]},
+  {id:"sm",cat:"consonant",label:"sm",sound:"/sm/",
+   items:[
+    {w:"smell", s:"You smell like a skunk!", sc:"你闻起来像臭鼬！", c:"闻起来"},
+    {w:"smile", s:"He's on a swing with a smile.", sc:"他微笑着荡秋千。", c:"微笑"}
+  ]},
+  {id:"sn",cat:"consonant",label:"sn",sound:"/sn/",
+   items:[
+    {w:"snow", s:"It snows on the street.", sc:"街上在下雪。", c:"雪"},
+    {w:"snake", s:"A snake has a strange dream.", sc:"蛇做了一个奇怪的梦。", c:"蛇"}
+  ]},
+  {id:"sw",cat:"consonant",label:"sw",sound:"/sw/",
+   items:[
+    {w:"swim", s:"I can swim in the pool.", sc:"我能在游泳池里游泳。", c:"游泳"},
+    {w:"swing", s:"He's on a swing with a smile.", sc:"他微笑着荡秋千。", c:"秋千"}
+  ]},
+  {id:"str",cat:"consonant",label:"str",sound:"/str/",
+   items:[
+    {w:"street", s:"It snows on the street.", sc:"街上在下雪。", c:"街道"},
+    {w:"strong", s:"He is very strong.", sc:"他很强壮。", c:"强壮的"}
+  ]},
+  {id:"sp",cat:"consonant",label:"sp",sound:"/sp/",
+   items:[
+    {w:"spin", s:"Scott, spin around.", sc:"斯科特，转个圈。", c:"旋转"},
+    {w:"space", s:"I look up at space.", sc:"我仰望太空。", c:"太空"}
+  ]},
+  {id:"st",cat:"consonant",label:"st",sound:"/st/",
+   items:[
+    {w:"stop", s:"Oh Scott, stop it!", sc:"哦斯科特，停下来！", c:"停止"},
+    {w:"stand", s:"Scott, stand up!", sc:"斯科特，站起来！", c:"站立"}
+  ]},
+  {id:"sk",cat:"consonant",label:"sk",sound:"/sk/",
+   items:[
+    {w:"skate", s:"I can skate on ice.", sc:"我可以在冰上滑冰。", c:"滑冰"},
+    {w:"skunk", s:"You smell like a skunk!", sc:"你闻起来像臭鼬！", c:"臭鼬"}
+  ]},
+  {id:"sc",cat:"consonant",label:"sc",sound:"/sk/",
+   items:[
+    {w:"scale", s:"The fish has scales.", sc:"鱼有鳞片。", c:"鳞片"},
+    {w:"scooter", s:"I ride a scooter to school.", sc:"我骑滑板车上学。", c:"滑板车"}
+  ]},
+  {id:"sh",cat:"consonant",label:"sh",sound:"/ʃ/",
+   items:[
+    {w:"fish", s:"Fish, shrimps and chicken wings.", sc:"鱼、虾和鸡翅。", c:"鱼"},
+    {w:"shrimp", s:"Shirley buys a lot of things.", sc:"雪莉买了很多东西。", c:"虾"}
+  ]},
+  {id:"ph",cat:"consonant",label:"ph",sound:"/f/",
+   items:[
+    {w:"phone", s:"Stephen doesn't answer her phone.", sc:"斯蒂芬不接她的电话。", c:"电话"},
+    {w:"photo", s:"I take a photo of the flower.", sc:"我拍了一张花的照片。", c:"照片"}
+  ]},
+  {id:"th",cat:"consonant",label:"th",sound:"/θ/ /ð/",
+   items:[
+    {w:"three", s:"I have three books.", sc:"我有三本书。", c:"三"},
+    {w:"tooth", s:"I brush my tooth every day.", sc:"我每天刷牙。", c:"牙齿"},
+    {w:"this", s:"This is my cat.", sc:"这是我的猫。", c:"这个"},
+    {w:"that", s:"That is a bird.", sc:"那是一只鸟。", c:"那个"}
+  ]},
+];
+
+// ==================== STATE ====================
+let state = {
+  mode: 'browse',
+  filter: 'all',
+  currentCard: null,
+  voiceType: 'uk',
+};
+let randomFlipped = {};
+
+// ==================== LOCAL STORAGE STATS ====================
+function getWeekKey() {
+  const d = new Date();
+  const start = new Date(d.getFullYear(), 0, 1);
+  const week = Math.ceil((((d - start) / 86400000) + start.getDay() + 1) / 7);
+  return `${d.getFullYear()}-W${week}`;
+}
+function getStats() {
+  const key = getWeekKey();
+  const raw = JSON.parse(localStorage.getItem('phonics_stats') || '{}');
+  if (raw.week !== key) return { week: key, counts: {} };
+  return raw;
+}
+function saveStats(stats) {
+  localStorage.setItem('phonics_stats', JSON.stringify(stats));
+}
+function incrementCount(id) {
+  const stats = getStats();
+  if (stats.week !== getWeekKey()) { stats.week = getWeekKey(); stats.counts = {}; }
+  stats.counts[id] = (stats.counts[id] || 0) + 1;
+  saveStats(stats);
+}
+function getCount(id) {
+  const stats = getStats();
+  return stats.counts[id] || 0;
+}
+function getAllCounts() {
+  const stats = getStats();
+  return stats.counts || {};
+}
+function resetCounts() {
+  if (!confirm('Reset all stats for this week?')) return;
+  const stats = getStats();
+  stats.counts = {};
+  saveStats(stats);
+  if (state.mode === 'random') randomFlipped = {};
+  renderWall();
+}
+
+// ==================== AUDIO ====================
+const synth = window.speechSynthesis;
+let synthReady = false;
+
+function initSynth() {
+  if (synthReady) return;
+  synth.getVoices();
+  synthReady = true;
+  // Some browsers load voices async — retry once after a short delay
+  if (synth.getVoices().length === 0) {
+    synth.addEventListener('voiceschanged', () => {}, { once: true });
+  }
+}
+
+function speak(text) {
+  if (!synth) return;
+  initSynth();
+
+  const u = new SpeechSynthesisUtterance(text);
+  const lang = state.voiceType === 'uk' ? 'en-GB' : 'en-US';
+  u.lang = lang;
+  u.rate = 0.85;
+
+  // Explicit voice matching for cross-browser reliability
+  const voices = synth.getVoices();
+  if (voices.length > 0) {
+    const voice = voices.find(v => v.lang.startsWith(lang));
+    if (voice) u.voice = voice;
+  }
+
+  synth.cancel();
+  setTimeout(() => synth.speak(u), 10);
+}
+
+// Kick-start on first user interaction
+document.addEventListener('click', initSynth, { once: true });
+
+// ==================== FILTER ====================
+function getFilteredCards() {
+  if (state.filter === 'all') return CARDS;
+  return CARDS.filter(c => c.cat === state.filter);
+}
+
+// ==================== RENDER: CARD WALL ====================
+function renderWall() {
+  const wall = document.getElementById('cardWall');
+  const empty = document.getElementById('emptyState');
+  const filtered = getFilteredCards();
+
+  if (filtered.length === 0) {
+    wall.innerHTML = '';
+    empty.innerHTML = '<div class="empty-state">No cards in this category</div>';
+    return;
+  }
+  empty.innerHTML = '';
+
+  let html = '';
+  for (const card of filtered) {
+    const catClass = VOICE_GROUPS[card.cat]?.cls || 'tile-letter';
+    const isBack = state.mode === 'random' && !randomFlipped[card.id];
+    const seen = getCount(card.id);
+    const showBadge = state.mode === 'random' && seen > 0;
+
+    html += `<div class="card-wall-tile ${isBack ? 'card-back' : catClass} ${showBadge ? 'seen-badge' : ''}"
+              data-count="${seen}" onclick="clickTile('${card.id}')">`;
+    if (isBack) { html += ''; } else { html += card.label; }
+    html += `</div>`;
+  }
+  wall.innerHTML = html;
+
+  const total = filtered.length;
+  let seenCount = 0, totalViews = 0;
+  for (const card of filtered) {
+    const c = getCount(card.id);
+    if (c > 0) seenCount++; totalViews += c;
+  }
+  const bar = document.getElementById('statsBar');
+  if (state.mode === 'random') {
+    const unflipped = filtered.filter(c => !randomFlipped[c.id]).length;
+    const allDone = total > 0 && unflipped === 0;
+    bar.innerHTML =
+      `Seen ${seenCount}/${total} · ${totalViews} views this week` +
+      (allDone ? '  ·  ✅ All done!' : `  ·  ${unflipped} left`) +
+      `  <span class="reset-counts" onclick="resetCounts()">Reset</span>`;
+  } else {
+    bar.textContent = '';
+  }
+}
+
+// ==================== RENDER: DETAIL ====================
+function openDetail(cardId) {
+  const card = CARDS.find(c => c.id === cardId);
+  if (!card) return;
+  state.currentCard = card;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'detail-overlay';
+  overlay.id = 'detailOverlay';
+
+  let itemsHtml = '';
+  for (const item of card.items) {
+    const safeW = item.w.replace(/'/g, "\\'");
+    const safeS = item.s.replace(/'/g, "\\'");
+    itemsHtml += `<div class="item-row" onclick="speak('${safeW}')">
+      <div class="item-word">${item.w} <span class="item-cn">${item.c}</span> <span class="speaker">🔊</span></div>
+      <div class="item-sentence" onclick="event.stopPropagation(); speak('${safeS}')">${item.s} <span class="speaker">🔊</span></div>
+      <div class="item-sc">${item.sc || ''}</div>
+    </div>`;
+  }
+
+  const filtered = getFilteredCards();
+  const curIdx = filtered.findIndex(c => c.id === cardId);
+  const prevId = curIdx > 0 ? filtered[curIdx - 1].id : null;
+  const nextId = curIdx < filtered.length - 1 ? filtered[curIdx + 1].id : null;
+
+  overlay.innerHTML = `
+    <div class="detail-card ${state.mode === 'random' ? 'flip-anim' : ''}">
+      <div class="detail-top">
+        <div class="detail-header">
+          <div class="detail-title-group">
+            <span class="detail-title">${card.label}</span>
+            <span class="detail-sound">${card.sound}</span>
+          </div>
+          <div class="detail-header-actions">
+            <button class="cn-toggle" onclick="toggleCn(this)">译</button>
+            <button class="detail-close btn" onclick="closeDetail()">✕</button>
+          </div>
+        </div>
+      </div>
+      <div class="detail-scroll">
+        <div class="detail-items">
+          ${itemsHtml}
+        </div>
+      </div>
+      <div class="detail-nav"></div>
+      ${state.mode === 'random'
+        ? `<button class="nav-big-next" onclick="randomNext()">Next<br>Card</button>`
+        : `<button class="nav-arrow nav-arrow-prev" onclick="navTo('${prevId}')" ${prevId ? '' : 'style="opacity:0.08;pointer-events:none"'}>←</button>
+           <button class="nav-arrow nav-arrow-next" onclick="navTo('${nextId}')" ${nextId ? '' : 'style="opacity:0.08;pointer-events:none"'}>→</button>`
+      }
+    </div>`;
+
+  document.body.appendChild(overlay);
+
+  // Swipe support on mobile
+  let touchStartX = 0;
+  overlay.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, {passive: true});
+  overlay.addEventListener('touchend', e => {
+    const diff = touchStartX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) < 50) return;
+    if (state.mode === 'browse') {
+      navTo(diff > 0 ? nextId : prevId);
+    } else if (state.mode === 'random' && diff > 0) {
+      randomNext();
+    }
+  }, {passive: true});
+}
+
+function closeDetail() {
+  const el = document.getElementById('detailOverlay');
+  if (el) el.remove();
+  state.currentCard = null;
+}
+
+function navTo(id) {
+  closeDetail();
+  if (id) openDetail(id);
+}
+
+// ==================== RANDOM LOGIC ====================
+function randomNext() {
+  closeDetail();
+  const filtered = getFilteredCards();
+  const unflipped = filtered.filter(c => !randomFlipped[c.id]);
+  let pool = unflipped.length > 0 ? unflipped : filtered;
+
+  pool.sort((a, b) => getCount(a.id) - getCount(b.id));
+  const pick = pool[Math.floor(Math.random() * Math.min(5, pool.length))];
+
+  if (pick) {
+    randomFlipped[pick.id] = true;
+    incrementCount(pick.id);
+    renderWall();
+    openDetail(pick.id);
+  }
+}
+
+function clickTile(id) {
+  if (state.mode === 'random') {
+    if (!randomFlipped[id]) {
+      randomFlipped[id] = true;
+      incrementCount(id);
+      renderWall();
+    }
+    openDetail(id);
+  } else {
+    openDetail(id);
+  }
+}
+
+// ==================== MODE / FILTER ====================
+function setMode(mode) {
+  state.mode = mode;
+  document.getElementById('modeBrowse').className = 'mode-btn' + (mode === 'browse' ? ' mode-btn-active' : '');
+  document.getElementById('modeRandom').className = 'mode-btn' + (mode === 'random' ? ' mode-btn-active' : '');
+  if (mode === 'random') randomFlipped = {};
+  closeDetail();
+  renderWall();
+}
+
+function setFilter(filter) {
+  state.filter = filter;
+  if (state.mode === 'random') randomFlipped = {};
+  closeDetail();
+  renderWall();
+}
+
+function toggleCn(btn) {
+  const overlay = btn.closest('.detail-overlay');
+  if (!overlay) return;
+  btn.classList.toggle('active');
+  overlay.querySelector('.detail-items').classList.toggle('show-cn');
+}
+
+function toggleVoice() {
+  state.voiceType = state.voiceType === 'uk' ? 'us' : 'uk';
+  document.getElementById('voiceBtn').textContent = state.voiceType === 'uk' ? 'UK' : 'US';
+}
+
+// ==================== INIT ====================
+function initFilters() {
+  const container = document.getElementById('filters');
+  const cats = [
+    { id: 'all', label: 'All' },
+    { id: 'letter', label: 'Letters' },
+    { id: 'short', label: 'Short' },
+    { id: 'long', label: 'Long' },
+    { id: 'vowel', label: 'Vowel' },
+    { id: 'consonant', label: 'Consonant' },
+  ];
+  for (const cat of cats) {
+    const count = cat.id === 'all' ? CARDS.length : CARDS.filter(c => c.cat === cat.id).length;
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-sm' + (cat.id === 'all' ? ' btn-active' : '');
+    btn.textContent = `${cat.label} (${count})`;
+    btn.onclick = () => {
+      container.querySelectorAll('.btn').forEach(b => b.classList.remove('btn-active'));
+      btn.classList.add('btn-active');
+      setFilter(cat.id);
+    };
+    container.appendChild(btn);
+  }
+}
+
+initFilters();
+renderWall();
+</script>
+</body>
+</html>
