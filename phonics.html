@@ -1227,12 +1227,16 @@ function speak(text) {
   const u = new SpeechSynthesisUtterance(text);
   const lang = state.voiceType === 'uk' ? 'en-GB' : 'en-US';
   u.lang = lang;
-  u.rate = 0.85;
+  u.rate = 0.7;
 
-  // Explicit voice matching for cross-browser reliability
+  // Prefer female voices
   const voices = synth.getVoices();
   if (voices.length > 0) {
-    const voice = voices.find(v => v.lang.startsWith(lang));
+    const femaleNames = state.voiceType === 'uk'
+      ? ['Flo', 'Sandy', 'Shelley']
+      : ['Samantha', 'Kathy', 'Sandy', 'Shelley'];
+    let voice = voices.find(v => v.lang.startsWith(lang) && femaleNames.some(n => v.name.includes(n)));
+    if (!voice) voice = voices.find(v => v.lang.startsWith(lang));
     if (voice) u.voice = voice;
   }
 
