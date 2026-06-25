@@ -34,7 +34,8 @@ body {
   flex-wrap: wrap;
   gap: 10px;
 }
-.header h1 { font-size: 20px; font-weight: 700; }
+.header h1 { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.version { font-size: 11px; font-weight: 600; color: var(--text-light); background: var(--accent-light); padding: 1px 7px; border-radius: 6px; line-height: 1.6; }
 .header-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
 .btn {
@@ -415,7 +416,7 @@ body {
 
 <div class="container" id="app">
   <div class="header">
-    <h1>🔤 Phonics</h1>
+    <h1>🔤 Phonics <span class="version">1.0.1</span></h1>
     <div class="header-controls">
       <button class="btn btn-sm" onclick="toggleVoice()" id="voiceBtn">UK</button>
       <span class="data-btn" style="position:relative">
@@ -1208,11 +1209,9 @@ function resetCounts() {
 
 // ==================== AUDIO ====================
 const synth = window.speechSynthesis;
-let synthReady = false;
 
 function speak(text) {
   if (!synth) return;
-  initSynth();
 
   const voices = synth.getVoices();
   const lang = state.voiceType === 'uk' ? 'en-GB' : 'en-US';
@@ -1238,9 +1237,6 @@ function speak(text) {
   synth.cancel();
   setTimeout(() => synth.speak(u), 10);
 }
-
-// Kick-start on first user interaction
-document.addEventListener('click', initSynth, { once: true });
 
 // ==================== FILTER ====================
 function getFilteredCards() {
@@ -1348,6 +1344,8 @@ function openDetail(cardId) {
     </div>`;
 
   document.body.appendChild(overlay);
+  // Lock background scroll
+  document.body.style.overflow = 'hidden';
 
   // Swipe support on mobile
   let touchStartX = 0;
@@ -1366,6 +1364,7 @@ function openDetail(cardId) {
 function closeDetail() {
   const el = document.getElementById('detailOverlay');
   if (el) el.remove();
+  document.body.style.overflow = '';
   state.currentCard = null;
 }
 
