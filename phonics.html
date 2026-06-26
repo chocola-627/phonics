@@ -15,7 +15,32 @@
   --border: #e8e0d4;
   --shadow: 0 2px 12px rgba(0,0,0,0.06);
   --radius: 14px;
+
+  /* category colors */
+  --c-letter: #1DDCCD;
+  --c-short: #02A3FB;
+  --c-long: #29E6F9;
+  --c-vowel: #29E6F9;
+  --c-consonant: #FEB801;
+  --c-vowel-teams: #FE84B3;
+  --c-silent-endings: #B794F4;
+
+  --c-letter-light: #d4f7f3;
+  --c-short-light: #cceeff;
+  --c-long-light: #d4faff;
+  --c-vowel-light: #d4faff;
+  --c-consonant-light: #fff3cc;
+  --c-vowel-teams-light: #FFE0EC;
+  --c-silent-endings-light: #EDE4FF;
+
+  /* theme (default: coral) */
+  --theme-color: #F08080;
+  --theme-light: #fce4e4;
 }
+html[data-theme="warm-gray"] { --theme-color: #A0937D; --theme-light: #e8e2d8; }
+html[data-theme="forest-green"] { --theme-color: #6B8E6B; --theme-light: #d4e4d4; }
+html[data-theme="terracotta"] { --theme-color: #C7785A; --theme-light: #f0d5ca; }
+html[data-theme="deep-blue"] { --theme-color: #5A7D9A; --theme-light: #c8d8e6; }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -51,7 +76,7 @@ body {
   transition: all .15s;
 }
 .btn:hover { opacity: .8; }
-.btn-active { background: var(--accent); color: #fff; }
+.btn-active { background: var(--theme-color); color: #fff; }
 .btn-sm { padding: 4px 10px; font-size: 12px; }
 
 /* filters */
@@ -80,7 +105,7 @@ body {
   transition: all .15s;
 }
 .mode-btn-active {
-  background: var(--accent);
+  background: var(--theme-color);
   color: #fff;
 }
 
@@ -107,30 +132,65 @@ body {
 }
 .card-wall-tile:hover { transform: translateY(-2px); }
 .card-wall-tile:active { transform: scale(.96); }
-.tile-letter { background: #f0ebe3; }
-.tile-short { background: #e8f0e8; }
-.tile-long { background: #e8eef0; }
-.tile-vowel { background: #ede8f0; }
-.tile-consonant { background: #f0e8ec; }
+.tile-letter { background: #fff; border-color: var(--c-letter); color: #0a7a6e; }
+.tile-short { background: #fff; border-color: var(--c-short); color: #015a8a; }
+.tile-long { background: #fff; border-color: var(--c-long); color: #0a6b7a; }
+.tile-vowel { background: #fff; border-color: var(--c-long); color: #0a6b7a; }
+.tile-consonant { background: #fff; border-color: var(--c-consonant); color: #8a5e00; }
+.tile-vowel-teams { background: #fff; border-color: var(--c-vowel-teams); color: #b3507a; }
+.tile-silent-endings { background: #fff; border-color: var(--c-silent-endings); color: #7550a8; }
 
-/* card back (random mode) */
-.card-back {
-  background: linear-gradient(135deg, var(--accent-light), #e8d5c4);
-  border: 2px solid var(--accent);
+/* flip card - random mode */
+.card-wall-tile {
+  perspective: 800px;
 }
-.card-back::after {
+.tile-flipper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.3s ease-out;
+  transform-style: preserve-3d;
+}
+.tile-flipper.flipped {
+  transform: rotateY(180deg);
+}
+.tile-front,
+.tile-back {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+}
+.tile-back {
+  background: linear-gradient(135deg, var(--theme-light), color-mix(in srgb, var(--theme-light) 85%, #888 15%));
+  border: 2px solid var(--theme-color);
+}
+.tile-back::after {
   content: "?";
   font-size: 24px;
-  color: var(--accent);
+  color: var(--theme-color);
   opacity: .5;
 }
+.tile-front {
+  transform: rotateY(180deg);
+  border: 2px solid transparent;
+}
 /* seen badge - only in random mode */
+.card-wall-tile.seen-badge {
+  overflow: visible;
+}
 .card-wall-tile.seen-badge::before {
   content: attr(data-count);
   position: absolute;
   top: -4px;
   right: -4px;
-  background: var(--accent);
+  z-index: 10;
+  background: var(--theme-color);
   color: #fff;
   font-size: 10px;
   font-weight: 700;
@@ -167,49 +227,56 @@ body {
   animation: slideUp .2s;
 }
 
-/* nav arrows - outside card */
-.nav-arrow {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  font-size: 36px;
-  color: var(--text-light);
-  z-index: 3;
-  width: 52px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color .15s;
-}
-.nav-arrow:hover { color: var(--text); }
-.nav-arrow-prev { left: -64px; }
-.nav-arrow-next { right: -64px; }
-
-/* big next button - random mode */
-.nav-big-next {
+/* nav arrows - hover to reveal, big circle */
+.nav-arrow, .nav-big-next {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  right: -80px;
-  width: 64px;
-  padding: 16px 6px;
+  z-index: 10;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
   border: none;
-  border-radius: 12px;
-  background: var(--accent);
-  color: #fff;
   cursor: pointer;
-  z-index: 3;
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.4;
-  text-align: center;
-  box-shadow: 0 2px 12px rgba(0,0,0,.1);
-  transition: all .15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity .25s, transform .2s;
+  background: rgba(255,255,255,.3);
+  box-shadow: 0 2px 12px rgba(0,0,0,.08);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
 }
-.nav-big-next:hover { box-shadow: 0 4px 16px rgba(0,0,0,.15); transform: translateY(-50%) translateX(-2px); }
+.nav-arrow:hover, .nav-big-next:hover { opacity: 1; transform: translateY(-50%) scale(1.1); }
+.nav-arrow:active, .nav-big-next:active { transform: translateY(-50%) scale(.95); }
+.nav-arrow-prev { left: -126px; }
+.nav-arrow-next, .nav-big-next { right: -126px; }
+
+/* thick cartoon chevron */
+.nav-arrow::after {
+  content: '';
+  display: block;
+  width: 20px;
+  height: 20px;
+  border: 6px solid var(--text);
+  border-left: none;
+  border-bottom: none;
+  box-sizing: border-box;
+}
+.nav-arrow-prev::after { transform: rotate(-135deg); margin-left: 8px; }
+.nav-arrow-next::after { transform: rotate(45deg); margin-right: 8px; }
+
+/* big next button - random mode, same circle style */
+.nav-big-next {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text);
+  text-align: center;
+  opacity: 1;
+}
+.nav-big-next:hover { box-shadow: 0 4px 16px rgba(0,0,0,.15); }
 .detail-top {
   flex-shrink: 0;
   padding: 20px 24px 0;
@@ -270,6 +337,12 @@ body {
   flex: 1;
 }
 .detail-items { display: flex; flex-direction: column; gap: 14px; }
+.detail-card-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
 .item-row {
   padding: 12px 14px;
   background: #faf8f6;
@@ -322,14 +395,81 @@ body {
   font-size: 15px;
 }
 
-/* animations */
+/* detail card colored mode — browse 随分类，random 随主题 */
+.detail-colored { --cat-color: var(--c-letter); --cat-light: var(--c-letter-light); }
+.detail-colored[data-cat="letter"] { --cat-color: var(--c-letter); --cat-light: var(--c-letter-light); }
+.detail-colored[data-cat="short"] { --cat-color: var(--c-short); --cat-light: var(--c-short-light); }
+.detail-colored[data-cat="long"],
+.detail-colored[data-cat="vowel"] { --cat-color: var(--c-long); --cat-light: var(--c-long-light); }
+.detail-colored[data-cat="consonant"] { --cat-color: var(--c-consonant); --cat-light: var(--c-consonant-light); }
+.detail-colored[data-cat="vowel-teams"] { --cat-color: var(--c-vowel-teams); --cat-light: var(--c-vowel-teams-light); }
+.detail-colored[data-cat="silent-endings"] { --cat-color: var(--c-silent-endings); --cat-light: var(--c-silent-endings-light); }
+
+.detail-colored .detail-card { background: #fff; }
+.detail-colored[data-random] .detail-card { background: transparent; }
+.detail-colored .detail-top { background: var(--cat-color); border-radius: 18px 18px 0 0; padding: 0; min-height: 32px; }
+.detail-colored .detail-nav { background: var(--cat-color); border-radius: 0 0 18px 18px; padding: 8px 24px; min-height: 32px; }
+.detail-colored[data-random] .detail-top { background: var(--theme-color); }
+.detail-colored[data-random] .detail-nav { background: var(--theme-color); }
+.detail-colored .detail-title { color: var(--text); text-shadow: none; }
+.detail-colored .detail-sound { color: var(--text-light); }
+.detail-colored .detail-close { background: var(--bg); color: var(--text); }
+.detail-colored .detail-close:hover { background: var(--cat-light); }
+.detail-colored[data-random] .detail-close:hover { background: var(--theme-light); }
+.detail-colored .cn-toggle { border-color: var(--text-light); color: var(--text-light); }
+.detail-colored .cn-toggle:hover { border-color: var(--cat-color); color: var(--cat-color); }
+.detail-colored .cn-toggle.active { border-color: var(--cat-color); color: var(--cat-color); background: var(--cat-light); }
+.detail-colored[data-random] .cn-toggle:hover { border-color: var(--theme-color); color: var(--theme-color); }
+.detail-colored[data-random] .cn-toggle.active { border-color: var(--theme-color); color: var(--theme-color); background: var(--theme-light); }
+.detail-colored .detail-scroll { background: #fff; padding-top: 18px; padding-bottom: 18px; }
+.detail-colored .item-row { background: #faf8f6; }
+.detail-colored .item-row:hover { background: #f0ece6; }
+.detail-colored .item-word { color: var(--text); }
+.detail-colored .item-sentence { color: #555; }
+.detail-colored .item-cn { color: var(--text-light); }
+.detail-colored .nav-arrow,
+.detail-colored .nav-big-next { background: var(--cat-light); }
+.detail-colored[data-random] .nav-arrow,
+.detail-colored[data-random] .nav-big-next { background: var(--theme-light); }
+.detail-colored .nav-arrow::after { border-color: var(--cat-color); }
+.detail-colored[data-random] .nav-arrow::after { border-color: var(--theme-color); }
+.detail-colored .nav-arrow:hover,
+.detail-colored .nav-big-next:hover { box-shadow: 0 4px 16px rgba(0,0,0,.15); }
+.detail-colored .nav-big-next { color: var(--cat-color); }
+.detail-colored[data-random] .nav-big-next { color: var(--theme-color); }
+
+/* filter button category colors */
+
+/* filter button category colors */
+.btn-filter[data-cat="letter"].btn-active { background: var(--c-letter); color: #fff; }
+.btn-filter[data-cat="short"].btn-active { background: var(--c-short); color: #fff; }
+.btn-filter[data-cat="long"].btn-active,
+.btn-filter[data-cat="vowel"].btn-active { background: var(--c-long); color: #fff; }
+.btn-filter[data-cat="consonant"].btn-active { background: var(--c-consonant); color: #fff; }
+.btn-filter[data-cat="vowel-teams"].btn-active { background: var(--c-vowel-teams); color: #fff; }
+.btn-filter[data-cat="silent-endings"].btn-active { background: var(--c-silent-endings); color: #fff; }
+
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes flipIn {
-  from { transform: perspective(600px) rotateY(90deg); opacity: 0; }
-  to { transform: perspective(600px) rotateY(0); opacity: 1; }
+/* detail card 3D flip in random mode */
+.detail-flipper {
+  display: grid;
+  background: #fff;
+  border-radius: 18px;
+  transition: transform 0.5s ease-out;
+  transform-style: preserve-3d;
 }
-.flip-anim { animation: flipIn .35s ease-out; }
+.detail-flipper > * {
+  grid-area: 1/1;
+  backface-visibility: hidden;
+}
+.detail-front-face {
+  transform: rotateY(180deg);
+  border-radius: 18px;
+}
+.detail-flipper.flipped {
+  transform: rotateY(180deg);
+}
 
 /* stats bar */
 .stats-bar {
@@ -384,6 +524,36 @@ body {
 }
 .data-menu-item:hover { background: var(--accent-light); }
 .data-menu-item:first-child { border-bottom: 1px solid var(--border); }
+
+.theme-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--card-bg);
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.12);
+  z-index: 10;
+  min-width: 120px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+.theme-menu.show { display: block; }
+.theme-menu-item {
+  padding: 10px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  color: var(--text);
+  transition: background .1s;
+  white-space: nowrap;
+}
+.theme-menu-item:hover { background: var(--accent-light); }
+.theme-menu-item.active { font-weight: 700; }
+.theme-menu-item.active::after { content: ' ✓'; }
 .toast {
   position: fixed;
   bottom: 40px;
@@ -416,9 +586,19 @@ body {
 
 <div class="container" id="app">
   <div class="header">
-    <h1>🔤 Phonics <span class="version">1.1.0</span></h1>
+    <h1>🔤 Phonics <span class="version">1.7.0</span></h1>
     <div class="header-controls">
       <button class="btn btn-sm" onclick="toggleVoice()" id="voiceBtn">UK</button>
+      <span class="theme-btn" style="position:relative">
+        <button class="btn btn-sm" onclick="toggleThemeMenu()">🎨</button>
+        <div class="theme-menu" id="themeMenu">
+          <button class="theme-menu-item" data-theme="coral" onclick="setTheme('coral')">🌊 珊瑚橙</button>
+          <button class="theme-menu-item" data-theme="warm-gray" onclick="setTheme('warm-gray')">🪨 暖灰</button>
+          <button class="theme-menu-item" data-theme="forest-green" onclick="setTheme('forest-green')">🌲 森林绿</button>
+          <button class="theme-menu-item" data-theme="terracotta" onclick="setTheme('terracotta')">🏺 陶土红</button>
+          <button class="theme-menu-item" data-theme="deep-blue" onclick="setTheme('deep-blue')">🌊 深海蓝</button>
+        </div>
+      </span>
       <span class="data-btn" style="position:relative">
         <button class="btn btn-sm" onclick="toggleDataMenu()">📁</button>
         <div class="data-menu" id="dataMenu">
@@ -450,6 +630,8 @@ const VOICE_GROUPS = {
   long:   { label: "Long", cls: "tile-long" },
   vowel:  { label: "Vowel", cls: "tile-vowel" },
   consonant: { label: "Consonant", cls: "tile-consonant" },
+  "vowel-teams": { label: "Vowel Teams", cls: "tile-vowel-teams" },
+  "silent-endings": { label: "Silent & Endings", cls: "tile-silent-endings" },
 };
 
 const CARDS = [
@@ -1208,16 +1390,273 @@ const CARDS = [
     {w:"gym", s:"We go to the gym.", sc:"我们去体育馆。", c:"体育馆"},
     {w:"orange", s:"She starts to squeeze oranges.", sc:"她开始挤橙子。", c:"橙子"}
   ]},
+  // ===== VOWEL TEAMS — R-Controlled (5) =====
+  {id:"ar",cat:"vowel-teams",label:"ar",sound:"/ɑːr/",
+   items:[
+    {w:"card", s:"His wife gives him a card.", sc:"他妻子给了他一张卡片。", c:"卡片"},
+    {w:"party", s:"There's a party in the park!", sc:"公园里有个派对！", c:"派对"},
+    {w:"yard", s:"Mark is working in the yard.", sc:"马克在院子里工作。", c:"院子"},
+    {w:"guitar", s:"Bring my guitar!", sc:"带上我的吉他！", c:"吉他"}
+  ]},
+  {id:"ir",cat:"vowel-teams",label:"ir",sound:"/ɜːr/",
+   items:[
+    {w:"bird", s:"She hears a bird chirping.", sc:"她听到一只鸟在叫。", c:"鸟"},
+    {w:"skirt", s:"She wears a pink skirt.", sc:"她穿了一条粉色裙子。", c:"裙子"},
+    {w:"girl", s:"The girl is happy.", sc:"那个女孩很开心。", c:"女孩"},
+    {w:"dirty", s:"Her skirt is dirty.", sc:"她的裙子脏了。", c:"脏的"}
+  ]},
+  {id:"ur",cat:"vowel-teams",label:"ur",sound:"/ɜːr/",
+   items:[
+    {w:"nurse", s:"Aunt Nancy is a nurse.", sc:"南希阿姨是一名护士。", c:"护士"},
+    {w:"purse", s:"She can't find her purse.", sc:"她找不到她的钱包。", c:"钱包"},
+    {w:"purple", s:"It's my purple purse!", sc:"这是我紫色的钱包！", c:"紫色"},
+    {w:"burn", s:"The toast will burn.", sc:"吐司要烤焦了。", c:"烧焦"}
+  ]},
+  {id:"er",cat:"vowel-teams",label:"er",sound:"/ɜːr/",
+   items:[
+    {w:"sister", s:"My sister is a doctor.", sc:"我姐姐是一名医生。", c:"姐姐"},
+    {w:"doctor", s:"She is a doctor.", sc:"她是一名医生。", c:"医生"},
+    {w:"letter", s:"She gets her letter.", sc:"她收到了她的信。", c:"信"},
+    {w:"water", s:"She gives it food and water.", sc:"她给它食物和水。", c:"水"}
+  ]},
+  {id:"or",cat:"vowel-teams",label:"or",sound:"/ɔːr/",
+   items:[
+    {w:"horse", s:"She sees a horse in the corner.", sc:"她在拐角处看到一匹马。", c:"马"},
+    {w:"fork", s:"He eats with a fork.", sc:"他用叉子吃饭。", c:"叉子"},
+    {w:"tractor", s:"The tractor is big.", sc:"拖拉机很大。", c:"拖拉机"},
+    {w:"actor", s:"The actor is on TV.", sc:"那个演员在电视上。", c:"演员"}
+  ]},
+  // ===== VOWEL TEAMS — R-Controlled Teams (5) =====
+  {id:"air",cat:"vowel-teams",label:"air",sound:"/eər/",
+   items:[
+    {w:"hair", s:"A bear has brown hair.", sc:"一只熊有棕色的毛。", c:"毛发"},
+    {w:"chair", s:"She sits on a chair.", sc:"她坐在椅子上。", c:"椅子"},
+    {w:"stair", s:"Be careful on the stair.", sc:"上下楼梯要小心。", c:"楼梯"},
+    {w:"fair", s:"We go to the fair.", sc:"我们去集市。", c:"集市"}
+  ]},
+  {id:"are",cat:"vowel-teams",label:"are",sound:"/eər/",
+   items:[
+    {w:"flare", s:"The fire makes a flare.", sc:"火发出亮光。", c:"闪光"},
+    {w:"stare", s:"Don't stare at me!", sc:"别盯着我看！", c:"盯着看"},
+    {w:"hare", s:"The hare runs fast.", sc:"野兔跑得很快。", c:"野兔"},
+    {w:"dare", s:"I dare you to jump!", sc:"我敢说你不敢跳！", c:"敢"}
+  ]},
+  {id:"ear-air",cat:"vowel-teams",label:"ear (/eər/)",sound:"/eər/",
+   items:[
+    {w:"bear", s:"A bear has brown hair.", sc:"一只熊有棕色的毛。", c:"熊"},
+    {w:"pear", s:"She eats a pear.", sc:"她吃了一个梨。", c:"梨"},
+    {w:"wear", s:"What should I wear?", sc:"我该穿什么？", c:"穿"},
+    {w:"tear", s:"There's a tear in my shirt.", sc:"我的衬衫上有个破洞。", c:"破洞"}
+  ]},
+  {id:"eer",cat:"vowel-teams",label:"eer",sound:"/ɪər/",
+   items:[
+    {w:"cheer", s:"I can hear the cheers.", sc:"我听到欢呼声。", c:"欢呼声"},
+    {w:"deer", s:"Come here, Mr. Deer!", sc:"过来这里，鹿先生！", c:"鹿"},
+    {w:"beer", s:"Let's have some beer!", sc:"我们喝点啤酒吧！", c:"啤酒"},
+    {w:"queer", s:"That feels queer.", sc:"那感觉有点奇怪。", c:"奇怪的"}
+  ]},
+  {id:"ear-eer",cat:"vowel-teams",label:"ear (/ɪər/)",sound:"/ɪər/",
+   items:[
+    {w:"hear", s:"What can you hear?", sc:"你能听到什么？", c:"听到"},
+    {w:"tear", s:"Don't tear the paper.", sc:"别撕了那张纸。", c:"撕"},
+    {w:"near", s:"The shop is near.", sc:"商店就在附近。", c:"附近"},
+    {w:"dear", s:"Oh dear, it's raining!", sc:"哦天哪，下雨了！", c:"哎呀"}
+  ]},
+  {id:"ere",cat:"vowel-teams",label:"ere",sound:"/ɪər/",
+   items:[
+    {w:"here", s:"Come here!", sc:"到这里来！", c:"这里"},
+    {w:"sphere", s:"The Earth is a sphere.", sc:"地球是一个球体。", c:"球体"},
+    {w:"mere", s:"It's a mere scratch.", sc:"只是个小划痕。", c:"仅仅"},
+    {w:"adhere", s:"Please adhere to the rules.", sc:"请遵守规则。", c:"遵守"}
+  ]},
+  // ===== VOWEL TEAMS — Diphthongs (4) =====
+  {id:"oi",cat:"vowel-teams",label:"oi",sound:"/ɔɪ/",
+   items:[
+    {w:"coin", s:"They find a golden coin.", sc:"他们找到一枚金币。", c:"硬币"},
+    {w:"soil", s:"Let's bury it in the soil!", sc:"我们把它埋进土里吧！", c:"土壤"},
+    {w:"noise", s:"Don't make noise!", sc:"不要发出噪音！", c:"噪音"},
+    {w:"join", s:"He joins the other boys.", sc:"他加入了其他男孩。", c:"加入"}
+  ]},
+  {id:"oy",cat:"vowel-teams",label:"oy",sound:"/ɔɪ/",
+   items:[
+    {w:"toy", s:"Roy is playing with toys.", sc:"罗伊在玩玩具。", c:"玩具"},
+    {w:"boy", s:"The boy is happy.", sc:"男孩很开心。", c:"男孩"},
+    {w:"joy", s:"It brings me joy.", sc:"这给我带来快乐。", c:"快乐"},
+    {w:"oyster", s:"I don't like oysters.", sc:"我不喜欢牡蛎。", c:"牡蛎"}
+  ]},
+  {id:"ou",cat:"vowel-teams",label:"ou",sound:"/aʊ/",
+   items:[
+    {w:"house", s:"He moves to a big new house.", sc:"他搬进了一栋大新房子。", c:"房子"},
+    {w:"mouse", s:"A little mouse moves in.", sc:"一只小老鼠搬了进来。", c:"老鼠"},
+    {w:"out", s:"The mouse freaks out.", sc:"老鼠吓坏了。", c:"出去"},
+    {w:"shout", s:"An owl shouts aloud.", sc:"一只猫头鹰大声叫着。", c:"喊叫"}
+  ]},
+  {id:"ow",cat:"vowel-teams",label:"ow",sound:"/aʊ/",
+   items:[
+    {w:"owl", s:"An owl shouts aloud.", sc:"一只猫头鹰大声叫着。", c:"猫头鹰"},
+    {w:"down", s:"Down there, an owl!", sc:"下面有一只猫头鹰！", c:"向下"},
+    {w:"town", s:"We go to town.", sc:"我们去镇上。", c:"城镇"},
+    {w:"cow", s:"The cow is in the field.", sc:"奶牛在田野里。", c:"奶牛"}
+  ]},
+  // ===== VOWEL TEAMS — Broad A / L-Controlled (4) =====
+  {id:"au",cat:"vowel-teams",label:"au",sound:"/ɔː/",
+   items:[
+    {w:"sauce", s:"The sauce tastes good.", sc:"酱汁味道不错。", c:"酱汁"},
+    {w:"August", s:"It is hot in August.", sc:"八月很热。", c:"八月"},
+    {w:"author", s:"The author writes books.", sc:"这位作者写书。", c:"作者"},
+    {w:"astronaut", s:"The astronaut is in space.", sc:"宇航员在太空。", c:"宇航员"}
+  ]},
+  {id:"aw",cat:"vowel-teams",label:"aw",sound:"/ɔː/",
+   items:[
+    {w:"paw", s:"He hurts his paw.", sc:"他伤到了爪子。", c:"爪子"},
+    {w:"jaw", s:"He hurts his jaw.", sc:"他伤到了下巴。", c:"下巴"},
+    {w:"saw", s:"I saw a big dog.", sc:"我看到一只大狗。", c:"看到"},
+    {w:"draw", s:"Let's draw a picture.", sc:"我们来画画吧。", c:"画画"}
+  ]},
+  {id:"al",cat:"vowel-teams",label:"al",sound:"/ɔː/",
+   items:[
+    {w:"talk", s:"Now he can't talk.", sc:"现在他不能说话了。", c:"说话"},
+    {w:"walk", s:"Now he can't walk.", sc:"现在他不能走路了。", c:"走路"},
+    {w:"chalk", s:"The teacher uses chalk.", sc:"老师用粉笔。", c:"粉笔"},
+    {w:"half", s:"Half of the cake is gone.", sc:"蛋糕少了一半。", c:"一半"}
+  ]},
+  {id:"all",cat:"vowel-teams",label:"all",sound:"/ɔːl/",
+   items:[
+    {w:"ball", s:"Paul is playing with a ball.", sc:"保罗在玩球。", c:"球"},
+    {w:"wall", s:"He doesn't notice the wall.", sc:"他没注意到墙。", c:"墙"},
+    {w:"tall", s:"The building is tall.", sc:"这栋楼很高。", c:"高的"},
+    {w:"small", s:"The mouse is small.", sc:"老鼠很小。", c:"小的"}
+  ]},
+  // ===== VOWEL TEAMS — Short oo / u (2) =====
+  {id:"oo-short",cat:"vowel-teams",label:"oo (/ʊ/)",sound:"/ʊ/",
+   items:[
+    {w:"book", s:"I read a good book.", sc:"我读了一本好书。", c:"书"},
+    {w:"cook", s:"The soup he cooks smells good.", sc:"他煮的汤闻起来很香。", c:"烹饪"},
+    {w:"foot", s:"He hurt his foot.", sc:"他伤到了脚。", c:"脚"},
+    {w:"wood", s:"Mr. Hook brings some wood.", sc:"胡克先生带来一些木头。", c:"木头"}
+  ]},
+  {id:"u-short",cat:"vowel-teams",label:"u (/ʊ/)",sound:"/ʊ/",
+   items:[
+    {w:"bush", s:"Behind the bush hides a bull.", sc:"灌木丛后面藏着一头公牛。", c:"灌木丛"},
+    {w:"bull", s:"A bull hides behind the bush.", sc:"一头公牛藏在灌木丛后面。", c:"公牛"},
+    {w:"full", s:"Now I am full!", sc:"现在我饱了！", c:"饱的"},
+    {w:"push", s:"Push the door, please.", sc:"请推门。", c:"推"}
+  ]},
+  // ===== SILENT & ENDINGS — Silent Letters (3) =====
+  {id:"mb",cat:"silent-endings",label:"mb",sound:"",
+   items:[
+    {w:"comb", s:"Mr. Knight combs his hair.", sc:"奈特先生梳了梳头发。", c:"梳子"},
+    {w:"climb", s:"Let's climb the hill!", sc:"我们爬山吧！", c:"攀爬"},
+    {w:"lamb", s:"He cuts some lamb with a knife.", sc:"他用刀切了一些羊肉。", c:"羊肉"},
+    {w:"thumb", s:"I hurt my thumb.", sc:"我伤到了大拇指。", c:"拇指"}
+  ]},
+  {id:"kn",cat:"silent-endings",label:"kn",sound:"",
+   items:[
+    {w:"knife", s:"He cuts with a knife.", sc:"他用刀切。", c:"刀"},
+    {w:"knock", s:"Knock on the door.", sc:"敲门。", c:"敲"},
+    {w:"knot", s:"Tie a knot in the rope.", sc:"在绳子上打个结。", c:"结"},
+    {w:"knee", s:"I hurt my knee.", sc:"我伤到了膝盖。", c:"膝盖"}
+  ]},
+  {id:"wr",cat:"silent-endings",label:"wr",sound:"",
+   items:[
+    {w:"wrap", s:"He wraps the gifts.", sc:"他把礼物包起来。", c:"包裹"},
+    {w:"write", s:"He writes something.", sc:"他写了些东西。", c:"写"},
+    {w:"wrong", s:"Something is wrong.", sc:"有点不对劲。", c:"错误的"},
+    {w:"wrist", s:"I hurt my wrist.", sc:"我伤到了手腕。", c:"手腕"}
+  ]},
+  // ===== SILENT & ENDINGS — Endings (5) =====
+  {id:"sure",cat:"silent-endings",label:"sure",sound:"/ʒər/",
+   items:[
+    {w:"measure", s:"Let's measure the table.", sc:"我们来量一下桌子。", c:"测量"},
+    {w:"treasure", s:"I can find some treasure!", sc:"我能找到宝藏！", c:"宝藏"},
+    {w:"pleasure", s:"It's my pleasure.", sc:"这是我的荣幸。", c:"愉快"},
+    {w:"leisure", s:"I enjoy my leisure time.", sc:"我喜欢我的休闲时光。", c:"休闲"}
+  ]},
+  {id:"ture",cat:"silent-endings",label:"ture",sound:"/tʃər/",
+   items:[
+    {w:"future", s:"I dream about my future.", sc:"我梦想着我的未来。", c:"未来"},
+    {w:"nature", s:"I want to explore nature.", sc:"我想探索大自然。", c:"大自然"},
+    {w:"adventure", s:"I can take an adventure.", sc:"我可以去冒险。", c:"冒险"},
+    {w:"picture", s:"Look at the picture!", sc:"看这幅画！", c:"画"}
+  ]},
+  {id:"tion",cat:"silent-endings",label:"tion",sound:"/ʃən/",
+   items:[
+    {w:"vacation", s:"He decides to take a vacation.", sc:"他决定去度假。", c:"假期"},
+    {w:"station", s:"It rains at the station.", sc:"车站在下雨。", c:"车站"},
+    {w:"action", s:"Time for action!", sc:"该行动了！", c:"行动"},
+    {w:"invention", s:"This is a great invention.", sc:"这是一个伟大的发明。", c:"发明"}
+  ]},
+  {id:"cian",cat:"silent-endings",label:"cian",sound:"/ʃən/",
+   items:[
+    {w:"musician", s:"A musician runs out of inspiration.", sc:"一位音乐家没了灵感。", c:"音乐家"},
+    {w:"magician", s:"The magician does a trick.", sc:"魔术师变了个魔术。", c:"魔术师"},
+    {w:"optician", s:"The optician checks my eyes.", sc:"验光师检查我的眼睛。", c:"验光师"},
+    {w:"beautician", s:"The beautician does my hair.", sc:"美容师给我做头发。", c:"美容师"}
+  ]},
+  {id:"sion",cat:"silent-endings",label:"sion",sound:"/ʃən/ /ʒən/",
+   items:[
+    {w:"television", s:"He watches television.", sc:"他看电视。", c:"电视"},
+    {w:"tension", s:"There is too much tension.", sc:"太紧张了。", c:"紧张"},
+    {w:"mansion", s:"The mansion is very big.", sc:"这座豪宅非常大。", c:"豪宅"},
+    {w:"excursion", s:"We go on an excursion.", sc:"我们去远足。", c:"远足"}
+  ]},
+  {id:"ous",cat:"silent-endings",label:"ous",sound:"/əs/",
+   items:[
+    {w:"famous", s:"The artist is very famous.", sc:"这位艺术家非常有名。", c:"有名的"},
+    {w:"precious", s:"Her paintings are precious.", sc:"她的画作很珍贵。", c:"珍贵的"},
+    {w:"dangerous", s:"It is dangerous!", sc:"这很危险！", c:"危险的"},
+    {w:"delicious", s:"The food is delicious.", sc:"食物很美味。", c:"美味的"}
+  ]},
+  {id:"ful",cat:"silent-endings",label:"ful",sound:"/fəl/",
+   items:[
+    {w:"beautiful", s:"It's the most beautiful of all.", sc:"它是最美的。", c:"美丽的"},
+    {w:"colorful", s:"Look at the colorful one!", sc:"看看那幅彩色的！", c:"多彩的"},
+    {w:"helpful", s:"You are very helpful.", sc:"你帮了大忙。", c:"有帮助的"},
+    {w:"successful", s:"She is very successful.", sc:"她非常成功。", c:"成功的"}
+  ]},
+  // ===== SILENT & ENDINGS — Nasal Combos (2) =====
+  {id:"ng",cat:"silent-endings",label:"ng",sound:"/ŋ/",
+   items:[
+    {w:"sing", s:"A young king likes to sing.", sc:"一位年轻的国王喜欢唱歌。", c:"唱歌"},
+    {w:"song", s:"He thinks of a new song.", sc:"他想到了一首新歌。", c:"歌曲"},
+    {w:"swing", s:"He's singing on a swing.", sc:"他在秋千上唱歌。", c:"秋千"},
+    {w:"king", s:"The king is young.", sc:"国王很年轻。", c:"国王"}
+  ]},
+  {id:"nk",cat:"silent-endings",label:"nk",sound:"/ŋk/",
+   items:[
+    {w:"think", s:"He thinks of a new song.", sc:"他想到了一首新歌。", c:"思考"},
+    {w:"pink", s:"Even the birds sing along.", sc:"连小鸟也跟着唱。", c:"粉色"},
+    {w:"ink", s:"The pen has no ink.", sc:"钢笔没墨了。", c:"墨水"},
+    {w:"sink", s:"Wash your hands in the sink.", sc:"在水槽里洗手。", c:"水槽"}
+  ]},
 ];
-
-// ==================== STATE ====================
 let state = {
   mode: 'browse',
   filter: 'all',
   currentCard: null,
   voiceType: 'uk',
+  theme: 'coral',
 };
 let randomFlipped = {};
+let flipping = false;
+
+// ==================== THEME ====================
+function toggleThemeMenu() {
+  document.getElementById('themeMenu').classList.toggle('show');
+}
+function setTheme(name) {
+  document.getElementById('themeMenu').classList.remove('show');
+  state.theme = name;
+  localStorage.setItem('phonics_theme', name);
+  if (name === 'coral') {
+    document.documentElement.removeAttribute('data-theme');
+  } else {
+    document.documentElement.dataset.theme = name;
+  }
+  document.querySelectorAll('.theme-menu-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.theme === name);
+  });
+}
 
 // ==================== LOCAL STORAGE STATS ====================
 function getWeekKey() {
@@ -1313,14 +1752,23 @@ function renderWall() {
   let html = '';
   for (const card of filtered) {
     const catClass = VOICE_GROUPS[card.cat]?.cls || 'tile-letter';
+    const borderVar = card.cat === 'vowel' ? 'long' : card.cat;
     const isBack = state.mode === 'random' && !randomFlipped[card.id];
     const seen = getCount(card.id);
     const showBadge = state.mode === 'random' && seen > 0;
 
-    html += `<div class="card-wall-tile ${isBack ? 'card-back' : catClass} ${showBadge ? 'seen-badge' : ''}"
-              data-count="${seen}" onclick="clickTile('${card.id}')">`;
-    if (isBack) { html += ''; } else { html += card.label; }
-    html += `</div>`;
+    if (state.mode === 'random') {
+      html += `<div class="card-wall-tile ${showBadge ? 'seen-badge' : ''}"
+                  data-count="${seen}" data-id="${card.id}" onclick="clickTile('${card.id}')">
+        <div class="tile-flipper ${isBack ? '' : 'flipped'}">
+          <div class="tile-back"></div>
+          <div class="tile-front ${catClass}" style="border-color:var(--c-${borderVar})">${card.label}</div>
+        </div>
+      </div>`;
+    } else {
+      html += `<div class="card-wall-tile ${catClass}"
+                  data-count="${seen}" onclick="clickTile('${card.id}')">${card.label}</div>`;
+    }
   }
   wall.innerHTML = html;
 
@@ -1350,8 +1798,10 @@ function openDetail(cardId) {
   state.currentCard = card;
 
   const overlay = document.createElement('div');
-  overlay.className = 'detail-overlay';
+  overlay.className = 'detail-overlay detail-colored';
   overlay.id = 'detailOverlay';
+  overlay.dataset.cat = card.cat;
+  if (state.mode === 'random') overlay.dataset.random = '';
 
   let itemsHtml = '';
   for (const item of card.items) {
@@ -1369,36 +1819,56 @@ function openDetail(cardId) {
   const prevId = curIdx > 0 ? filtered[curIdx - 1].id : null;
   const nextId = curIdx < filtered.length - 1 ? filtered[curIdx + 1].id : null;
 
+  const bodyHtml = `
+        <div class="detail-top"></div>
+        <div class="detail-scroll">
+          <div class="detail-header">
+            <div class="detail-title-group">
+              <span class="detail-title">${card.label}</span>
+              <span class="detail-sound">${card.sound}</span>
+            </div>
+            <div class="detail-header-actions">
+              <button class="cn-toggle" onclick="toggleCn(this)">译</button>
+              <button class="detail-close btn" onclick="closeDetail()">✕</button>
+            </div>
+          </div>
+          <div class="detail-items">
+            ${itemsHtml}
+          </div>
+        </div>
+        <div class="detail-nav"></div>`;
+  const wrappedBody = state.mode === 'random'
+    ? `<div class="detail-flipper" id="detailFlipper">
+          <div class="detail-front-face">
+            <div class="detail-card-body">${bodyHtml}</div>
+          </div>
+        </div>`
+    : `<div class="detail-card-body">${bodyHtml}</div>`;
+
   overlay.innerHTML = `
-    <div class="detail-card ${state.mode === 'random' ? 'flip-anim' : ''}">
-      <div class="detail-top">
-        <div class="detail-header">
-          <div class="detail-title-group">
-            <span class="detail-title">${card.label}</span>
-            <span class="detail-sound">${card.sound}</span>
-          </div>
-          <div class="detail-header-actions">
-            <button class="cn-toggle" onclick="toggleCn(this)">译</button>
-            <button class="detail-close btn" onclick="closeDetail()">✕</button>
-          </div>
-        </div>
-      </div>
-      <div class="detail-scroll">
-        <div class="detail-items">
-          ${itemsHtml}
-        </div>
-      </div>
-      <div class="detail-nav"></div>
+    <div class="detail-card"${state.mode === 'random' ? ' style="perspective:800px"' : ''}>
+      ${state.mode === 'browse' && prevId ? `<button class="nav-arrow nav-arrow-prev" onclick="navTo('${prevId}')"></button>` : ''}
+      ${state.mode === 'browse' && nextId ? `<button class="nav-arrow nav-arrow-next" onclick="navTo('${nextId}')"></button>` : ''}
+      ${wrappedBody}
       ${state.mode === 'random'
         ? `<button class="nav-big-next" onclick="randomNext()">Next<br>Card</button>`
-        : `<button class="nav-arrow nav-arrow-prev" onclick="navTo('${prevId}')" ${prevId ? '' : 'style="opacity:0.08;pointer-events:none"'}>←</button>
-           <button class="nav-arrow nav-arrow-next" onclick="navTo('${nextId}')" ${nextId ? '' : 'style="opacity:0.08;pointer-events:none"'}>→</button>`
+        : ''
       }
     </div>`;
 
   document.body.appendChild(overlay);
   // Lock background scroll
   document.body.style.overflow = 'hidden';
+
+  // In random mode, trigger flip after mount
+  if (state.mode === 'random') {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const flipper = document.getElementById('detailFlipper');
+        if (flipper) flipper.classList.add('flipped');
+      });
+    });
+  }
 
   // Swipe support on mobile
   let touchStartX = 0;
@@ -1446,12 +1916,21 @@ function randomNext() {
 
 function clickTile(id) {
   if (state.mode === 'random') {
-    if (!randomFlipped[id]) {
-      randomFlipped[id] = true;
-      incrementCount(id);
-      renderWall();
+    if (!randomFlipped[id] && !flipping) {
+      flipping = true;
+      // Trigger flip animation on wall tile
+      const tile = document.querySelector(`.card-wall-tile[data-id="${id}"] .tile-flipper`);
+      if (tile) tile.classList.add('flipped');
+      setTimeout(() => {
+        randomFlipped[id] = true;
+        incrementCount(id);
+        renderWall();
+        flipping = false;
+        openDetail(id);
+      }, 300);
+    } else if (randomFlipped[id]) {
+      openDetail(id);
     }
-    openDetail(id);
   } else {
     openDetail(id);
   }
@@ -1492,6 +1971,7 @@ function toggleDataMenu() {
 }
 document.addEventListener('click', e => {
   if (!e.target.closest('.data-btn')) document.getElementById('dataMenu').classList.remove('show');
+  if (!e.target.closest('.theme-btn')) document.getElementById('themeMenu').classList.remove('show');
 });
 
 function showToast(msg) {
@@ -1552,14 +2032,17 @@ function initFilters() {
     { id: 'long', label: 'Long' },
     { id: 'vowel', label: 'Vowel' },
     { id: 'consonant', label: 'Consonant' },
+    { id: 'vowel-teams', label: 'Vowel Teams' },
+    { id: 'silent-endings', label: 'Silent & Endings' },
   ];
   for (const cat of cats) {
     const count = cat.id === 'all' ? CARDS.length : CARDS.filter(c => c.cat === cat.id).length;
     const btn = document.createElement('button');
-    btn.className = 'btn btn-sm' + (cat.id === 'all' ? ' btn-active' : '');
+    btn.className = 'btn btn-sm' + (cat.id === 'all' ? ' btn-active' : '') + ' btn-filter';
     btn.textContent = `${cat.label} (${count})`;
+    btn.dataset.cat = cat.id;
     btn.onclick = () => {
-      container.querySelectorAll('.btn').forEach(b => b.classList.remove('btn-active'));
+      container.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('btn-active'));
       btn.classList.add('btn-active');
       setFilter(cat.id);
     };
@@ -1567,7 +2050,19 @@ function initFilters() {
   }
 }
 
+function initTheme() {
+  const saved = localStorage.getItem('phonics_theme') || 'coral';
+  state.theme = saved;
+  if (saved !== 'coral') {
+    document.documentElement.dataset.theme = saved;
+  }
+  document.querySelectorAll('.theme-menu-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.theme === saved);
+  });
+}
+
 initFilters();
+initTheme();
 renderWall();
 </script>
 </body>
