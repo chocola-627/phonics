@@ -416,7 +416,7 @@ body {
 
 <div class="container" id="app">
   <div class="header">
-    <h1>🔤 Phonics <span class="version">1.0.1</span></h1>
+    <h1>🔤 Phonics <span class="version">1.0.2</span></h1>
     <div class="header-controls">
       <button class="btn btn-sm" onclick="toggleVoice()" id="voiceBtn">UK</button>
       <span class="data-btn" style="position:relative">
@@ -1224,13 +1224,15 @@ function speak(text) {
 
   const u = new SpeechSynthesisUtterance(text);
   u.lang = lang;
-  u.rate = 0.5;
+  u.rate = 0.8;
 
-  // Prefer female voices
-  const femaleNames = state.voiceType === 'uk'
-    ? ['Flo', 'Sandy', 'Shelley', 'Grandma']
-    : ['Samantha', 'Kathy', 'Sandy', 'Shelley', 'Flo', 'Grandma'];
+  // Cross-platform female voice names (macOS + iOS)
+  const femaleNames = ['Samantha', 'Karen', 'Moira', 'Tessa', 'Kate', 'Flo', 'Sandy', 'Shelley', 'Grandma'];
+  // Try: exact locale + female voice
   let voice = voices.find(v => v.lang.startsWith(lang) && femaleNames.some(n => v.name.includes(n)));
+  // Try: any English locale + female (catches en-AU Karen / en-IE Moira / en-ZA Tessa on iOS for UK mode)
+  if (!voice) voice = voices.find(v => v.lang.startsWith('en') && femaleNames.some(n => v.name.includes(n)));
+  // Fallback: any voice for target locale
   if (!voice) voice = voices.find(v => v.lang.startsWith(lang));
   if (voice) u.voice = voice;
 
