@@ -416,7 +416,7 @@ body {
 
 <div class="container" id="app">
   <div class="header">
-    <h1>🔤 Phonics <span class="version">1.0.2</span></h1>
+    <h1>🔤 Phonics <span class="version">1.1.0</span></h1>
     <div class="header-controls">
       <button class="btn btn-sm" onclick="toggleVoice()" id="voiceBtn">UK</button>
       <span class="data-btn" style="position:relative">
@@ -1156,6 +1156,57 @@ const CARDS = [
     {w:"tooth", s:"I brush my tooth every day.", sc:"我每天刷牙。", c:"牙齿"},
     {w:"this", s:"This is my cat.", sc:"这是我的猫。", c:"这个"},
     {w:"that", s:"That is a bird.", sc:"那是一只鸟。", c:"那个"}
+  ]},
+  // ===== MORE CONSONANT DIGRAPHS (4) =====
+  {id:"wh",cat:"consonant",label:"wh",sound:"/w/",
+   items:[
+    {w:"white", s:"A white whale is near the beach.", sc:"一只白鲸在海滩附近。", c:"白色的"},
+    {w:"whale", s:"A white whale is near the beach.", sc:"一只白鲸在海滩附近。", c:"鲸鱼"}
+  ]},
+  {id:"ch",cat:"consonant",label:"ch",sound:"/tʃ/",
+   items:[
+    {w:"chick", s:"A little chick is under the bench.", sc:"一只小鸡在长凳下面。", c:"小鸡"},
+    {w:"bench", s:"A little chick is under the bench.", sc:"一只小鸡在长凳下面。", c:"长凳"}
+  ]},
+  {id:"tch",cat:"consonant",label:"tch",sound:"/tʃ/",
+   items:[
+    {w:"catch", s:"The whale catches a cold.", sc:"鲸鱼感冒了。", c:"抓住"},
+    {w:"kitchen", s:"Mom is cooking in the kitchen.", sc:"妈妈在厨房做饭。", c:"厨房"}
+  ]},
+  {id:"gh",cat:"consonant",label:"gh",sound:"/f/",
+   items:[
+    {w:"laugh", s:"The story makes us laugh.", sc:"这个故事让我们笑了。", c:"笑"},
+    {w:"cough", s:"The chick has a bad cough.", sc:"小鸡咳得很厉害。", c:"咳嗽"}
+  ]},
+  // ===== CONSONANT PAIRS (2) =====
+  {id:"ck",cat:"consonant",label:"ck",sound:"/k/",
+   items:[
+    {w:"neck", s:"I wear a scarf around my neck.", sc:"我脖子上围了条围巾。", c:"脖子"},
+    {w:"rock", s:"I sit on a big rock.", sc:"我坐在一块大石头上。", c:"石头"},
+    {w:"duck", s:"What does a duck say?", sc:"鸭子怎么说？", c:"鸭子"},
+    {w:"clock", s:"What does a clock say?", sc:"时钟怎么说？", c:"时钟"}
+  ]},
+  {id:"qu",cat:"consonant",label:"qu",sound:"/kw/",
+   items:[
+    {w:"queen", s:"The queen has a quilt.", sc:"女王有一条被子。", c:"女王"},
+    {w:"quiet", s:"Please be quiet.", sc:"请安静。", c:"安静的"},
+    {w:"quack", s:"A duck says quack, quack.", sc:"鸭子说嘎嘎嘎。", c:"嘎嘎叫"},
+    {w:"quilt", s:"The queen has a quilt.", sc:"女王有一条被子。", c:"被子"}
+  ]},
+  // ===== SOFT SOUNDS (2) =====
+  {id:"soft-c",cat:"consonant",label:"soft c",sound:"/s/",
+   items:[
+    {w:"ice", s:"Then, she adds some ice.", sc:"然后她加了些冰块。", c:"冰"},
+    {w:"face", s:"Oops, it's all over her face.", sc:"哎呀，全洒在她脸上了。", c:"脸"},
+    {w:"circle", s:"Draw a big circle.", sc:"画一个大圆圈。", c:"圆圈"},
+    {w:"bicycle", s:"I ride a bicycle.", sc:"我骑自行车。", c:"自行车"}
+  ]},
+  {id:"soft-g",cat:"consonant",label:"soft g",sound:"/dʒ/",
+   items:[
+    {w:"giraffe", s:"The giraffe wants some juice.", sc:"长颈鹿想喝果汁。", c:"长颈鹿"},
+    {w:"giant", s:"The giant is very tall.", sc:"巨人很高。", c:"巨人"},
+    {w:"gym", s:"We go to the gym.", sc:"我们去体育馆。", c:"体育馆"},
+    {w:"orange", s:"She starts to squeeze oranges.", sc:"她开始挤橙子。", c:"橙子"}
   ]},
 ];
 
